@@ -23,6 +23,7 @@ export class ControlPanel {
   private statsContainer!: HTMLElement;
   private statusText!: HTMLElement;
   private wallCountEl!: HTMLElement;
+  private backendIndicator!: HTMLElement;
 
   // Callbacks
   onGenerate: (() => void) | null = null;
@@ -41,6 +42,18 @@ export class ControlPanel {
 
   setStatus(text: string): void {
     this.statusText.textContent = text;
+  }
+
+  setBackendStatus(backend: 'python' | 'local'): void {
+    if (backend === 'python') {
+      this.backendIndicator.textContent = 'Python API';
+      this.backendIndicator.style.color = '#2ecc71';
+      this.backendIndicator.style.borderColor = '#2ecc71';
+    } else {
+      this.backendIndicator.textContent = 'Local (TS)';
+      this.backendIndicator.style.color = '#e67e22';
+      this.backendIndicator.style.borderColor = '#e67e22';
+    }
   }
 
   updateStats(frame: { studs: number; plates: number; noggings: number; total: number } | null, wallCount: number): void {
@@ -67,6 +80,12 @@ export class ControlPanel {
     title.className = 'panel-title';
     title.textContent = 'Timber Frame Compiler';
     this.container.appendChild(title);
+
+    // Backend indicator
+    this.backendIndicator = document.createElement('div');
+    this.backendIndicator.className = 'backend-indicator';
+    this.backendIndicator.textContent = 'Local (TS)';
+    this.container.appendChild(this.backendIndicator);
 
     // Mode indicator
     const modeDiv = document.createElement('div');
