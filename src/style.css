@@ -1,0 +1,171 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  background: #0a0a0a;
+  color: #e0e0e0;
+}
+
+#app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+#viewport {
+  flex: 1;
+  position: relative;
+  cursor: crosshair;
+}
+
+#viewport canvas {
+  display: block;
+}
+
+#controls {
+  width: 300px;
+  min-width: 300px;
+  padding: 20px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  overflow-y: auto;
+  border-left: 1px solid #2a2a4a;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e67e22;
+  margin-bottom: 4px;
+}
+
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.param-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.param-row label {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.param-row input,
+.param-row select {
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  color: #e0e0e0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.param-row input:focus,
+.param-row select:focus {
+  border-color: #e67e22;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: #e67e22;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #d35400;
+}
+
+.btn-danger {
+  background: #444;
+  color: #ccc;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #2a2a4a;
+  color: #ccc;
+}
+
+.btn-secondary:hover {
+  background: #3a3a5a;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-bar {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #2a2a4a;
+  font-size: 12px;
+  color: #888;
+}
+
+.status-bar .stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.mode-indicator {
+  padding: 8px 12px;
+  background: #16213e;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+}
+
+.help-text {
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
