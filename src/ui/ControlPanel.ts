@@ -154,14 +154,9 @@ export class ControlPanel {
     phaseInfo.appendChild(this.phaseDesc);
     this.container.appendChild(phaseInfo);
 
-    // Drawing hint (shown during exterior/interior phases)
+    // Drawing hint (shown during exterior/interior phases, content set per-phase)
     this.drawingHint = document.createElement('div');
     this.drawingHint.className = 'drawing-hint';
-    this.drawingHint.innerHTML = `
-      <div class="hint-item">Click to place wall points</div>
-      <div class="hint-item">Walls chain automatically</div>
-      <div class="hint-item">Press <kbd>Esc</kbd> to finish chain</div>
-    `;
     this.container.appendChild(this.drawingHint);
 
     // Openings hint (shown during openings phase)
@@ -310,9 +305,23 @@ export class ControlPanel {
     this.phaseTitle.style.color = meta.color;
     this.phaseDesc.textContent = meta.desc;
 
-    // Show/hide sections based on phase
-    const isDrawing = this.currentPhase === 'exterior' || this.currentPhase === 'interior';
-    this.drawingHint.style.display = isDrawing ? 'block' : 'none';
+    // Show/hide sections + per-phase drawing hints
+    if (this.currentPhase === 'exterior') {
+      this.drawingHint.innerHTML = `
+        <div class="hint-item">Click and drag to draw the footprint</div>
+        <div class="hint-item">Drag arrows to resize</div>
+      `;
+      this.drawingHint.style.display = 'block';
+    } else if (this.currentPhase === 'interior') {
+      this.drawingHint.innerHTML = `
+        <div class="hint-item">Click to place wall points</div>
+        <div class="hint-item">Walls chain automatically</div>
+        <div class="hint-item">Press <kbd>Esc</kbd> to finish chain</div>
+      `;
+      this.drawingHint.style.display = 'block';
+    } else {
+      this.drawingHint.style.display = 'none';
+    }
     this.openingsHint.style.display = this.currentPhase === 'openings' ? 'block' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
 

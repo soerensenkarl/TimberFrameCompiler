@@ -4,6 +4,7 @@ import { TimberEngine } from './core/TimberEngine';
 import { WallManager } from './core/WallManager';
 import { ApiClient } from './core/ApiClient';
 import { DrawingTool } from './ui/DrawingTool';
+import { FootprintTool } from './ui/FootprintTool';
 import { ControlPanel } from './ui/ControlPanel';
 import { Phase } from './types';
 
@@ -18,11 +19,13 @@ const apiClient = new ApiClient();
 const wallManager = new WallManager();
 const controlPanel = new ControlPanel(controlsContainer);
 
-const drawingTool = new DrawingTool(
-  sceneManager,
-  wallManager,
-  controlPanel.getParams().gridSnap,
-);
+const gridSnap = controlPanel.getParams().gridSnap;
+
+// FootprintTool for exterior phase (rectangle drag + resize arrows)
+const footprintTool = new FootprintTool(sceneManager, wallManager, gridSnap);
+
+// DrawingTool for interior phase (click-to-chain walls)
+const drawingTool = new DrawingTool(sceneManager, wallManager, gridSnap);
 
 // Track whether the Python backend is available
 let useApi = false;
@@ -95,31 +98,30 @@ async function regenerate(): Promise<void> {
 
 // Phase transition handler
 function onPhaseChange(phase: Phase): void {
+  // Disable both tools first
+  footprintTool.disable();
   drawingTool.cancelDrawing();
+  drawingTool.disable();
 
   switch (phase) {
     case 'exterior':
-      drawingTool.setWallType('exterior');
-      drawingTool.enable();
+      footprintTool.enable();
       break;
     case 'interior':
       drawingTool.setWallType('interior');
       drawingTool.enable();
       break;
     case 'openings':
-      // Openings not yet implemented — disable drawing
-      drawingTool.disable();
+      // Openings not yet implemented
       break;
     case 'roof':
-      drawingTool.disable();
       break;
     case 'done':
-      drawingTool.disable();
       // Final generation already triggered by ControlPanel
       break;
   }
 
-  // Re-render frame preview whenever phase changes (walls may have been drawn)
+  // Re-render frame preview whenever phase changes
   regenerate();
 }
 
@@ -134,6 +136,7 @@ controlPanel.onClear = () => {
   wallManager.clear();
   clearFrame();
   clearPreviews();
+  footprintTool.reset();
   drawingTool.cancelDrawing();
   controlPanel.updateStats(null, 0);
 };
@@ -143,11 +146,11 @@ wallManager.onChange = () => regenerate();
 
 // Wire: parameter slider changes update grid snap and regenerate
 controlPanel.onParamsChange = (params) => {
+  footprintTool.setGridSnap(params.gridSnap);
   drawingTool.setGridSnap(params.gridSnap);
   regenerateDebounced();
 };
 
-// Start in exterior phase
-drawingTool.setWallType('exterior');
-drawingTool.enable();
+// Start in exterior phase with footprint tool
+footprintTool.enable();
 sceneManager.start();

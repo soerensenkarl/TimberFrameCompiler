@@ -41,6 +41,32 @@ export class WallManager {
     return this.walls.size;
   }
 
+  /** Replace all exterior walls with a rectangle footprint (notifies once) */
+  setFootprint(minX: number, minZ: number, maxX: number, maxZ: number): void {
+    // Remove existing exterior walls
+    for (const [id, w] of this.walls) {
+      if (w.wallType === 'exterior') this.walls.delete(id);
+    }
+
+    // Add 4 walls (clockwise from top-left)
+    const corners: Point2D[] = [
+      { x: minX, z: minZ },
+      { x: maxX, z: minZ },
+      { x: maxX, z: maxZ },
+      { x: minX, z: maxZ },
+    ];
+    for (let i = 0; i < 4; i++) {
+      const id = `wall-${nextId++}`;
+      this.walls.set(id, {
+        id,
+        start: corners[i],
+        end: corners[(i + 1) % 4],
+        wallType: 'exterior',
+      });
+    }
+    this.notify();
+  }
+
   /** Get the bounding box of all exterior walls */
   getExteriorBounds(): { minX: number; maxX: number; minZ: number; maxZ: number } | null {
     const ext = this.getExteriorWalls();
