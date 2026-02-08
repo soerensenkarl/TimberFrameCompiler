@@ -273,7 +273,19 @@ export class FootprintTool {
   // ─── Touch handlers ───
 
   private onTouchStart(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1) {
+      // Second finger appeared — cancel any in-progress drag so it doesn't
+      // accidentally complete when the navigation gesture ends
+      if (this.state === 'dragging') {
+        this.state = 'idle';
+        this.dragStart = null;
+        this.clearRectLine();
+        this.widthLabel.style.display = 'none';
+        this.depthLabel.style.display = 'none';
+      }
+      this.resizing = null;
+      return;
+    }
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseDown(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
