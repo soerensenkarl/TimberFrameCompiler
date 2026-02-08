@@ -660,7 +660,7 @@ body {
     top: auto;
     width: 100%;
     min-width: unset;
-    max-height: 65vh;
+    max-height: 49vh;
     z-index: 25;
     transform: translateY(calc(100% - 56px));
     transition: transform 0.25s ease;
