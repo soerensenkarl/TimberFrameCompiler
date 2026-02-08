@@ -172,6 +172,19 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
+// ─── Mobile menu toggle ───
+
+const menuToggle = document.createElement('button');
+menuToggle.className = 'menu-toggle';
+menuToggle.title = 'Toggle menu';
+menuToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
+viewport.appendChild(menuToggle);
+
+menuToggle.addEventListener('click', () => {
+  const open = controlsContainer.classList.toggle('panel-open');
+  menuToggle.classList.toggle('active', open);
+});
+
 // Start in exterior phase with footprint tool
 footprintTool.enable();
 activeToolRef = footprintTool;
