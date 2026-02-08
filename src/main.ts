@@ -172,6 +172,11 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
+// Wire: cancel drawing from control panel button
+controlPanel.onCancelDrawing = () => {
+  drawingTool.cancelDrawing();
+};
+
 // ─── Mobile pull-up handle ───
 
 const pullHandle = document.createElement('div');
