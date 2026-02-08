@@ -9,6 +9,10 @@ const MEMBER_COLORS: Record<MemberType, number> = {
   rafter: 0x8B6914,
   ridge_beam: 0x704214,
   collar_tie: 0x9B7530,
+  header: 0xd4763a,
+  trimmer: 0xbf8a50,
+  sill_plate: 0xa07840,
+  cripple_stud: 0x9e8a60,
 };
 
 export class MeshBuilder {
@@ -77,10 +81,10 @@ export class MeshBuilder {
   getMemberCount(frame: TimberFrame): { studs: number; plates: number; noggings: number; rafters: number; total: number } {
     let studs = 0, plates = 0, noggings = 0, rafters = 0;
     for (const m of frame.members) {
-      if (m.type === 'stud') studs++;
+      if (m.type === 'stud' || m.type === 'trimmer' || m.type === 'cripple_stud') studs++;
       else if (m.type === 'nogging') noggings++;
       else if (m.type === 'rafter' || m.type === 'ridge_beam' || m.type === 'collar_tie') rafters++;
-      else plates++;
+      else plates++; // bottom_plate, top_plate, header, sill_plate
     }
     return { studs, plates, noggings, rafters, total: frame.members.length };
   }

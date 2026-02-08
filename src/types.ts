@@ -19,8 +19,22 @@ export interface Wall {
   wallType: 'exterior' | 'interior';
 }
 
+/** An opening (window or door) placed on a wall */
+export interface Opening {
+  id: string;
+  wallId: string;
+  type: 'window' | 'door';
+  position: number;   // distance along wall from start to center, in meters
+  width: number;      // meters
+  height: number;     // meters
+  sillHeight: number; // meters above floor (0 for doors)
+}
+
 /** Type of timber member in the frame */
-export type MemberType = 'stud' | 'bottom_plate' | 'top_plate' | 'nogging' | 'rafter' | 'ridge_beam' | 'collar_tie';
+export type MemberType =
+  | 'stud' | 'bottom_plate' | 'top_plate' | 'nogging'
+  | 'rafter' | 'ridge_beam' | 'collar_tie'
+  | 'header' | 'trimmer' | 'sill_plate' | 'cripple_stud';
 
 /** A single piece of timber positioned in 3D space */
 export interface TimberMember {

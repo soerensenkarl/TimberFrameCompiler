@@ -1,10 +1,13 @@
-import { Wall, TimberMember, TimberFrame, FrameParams, RoofConfig } from '../types';
+import { Wall, Opening, TimberMember, TimberFrame, FrameParams, RoofConfig } from '../types';
 
 export class TimberEngine {
-  generate(walls: Wall[], params: FrameParams): TimberFrame {
+  generate(walls: Wall[], params: FrameParams, openings: Opening[] = []): TimberFrame {
     const members: TimberMember[] = [];
     for (const wall of walls) {
-      members.push(...this.generateWallFrame(wall, params));
+      const wallOpenings = openings
+        .filter(o => o.wallId === wall.id)
+        .sort((a, b) => a.position - b.position);
+      members.push(...this.generateWallFrame(wall, params, wallOpenings));
     }
     if (params.roof) {
       members.push(...this.generateRoof(walls, params));
@@ -12,7 +15,7 @@ export class TimberEngine {
     return { members, sourceWalls: walls };
   }
 
-  private generateWallFrame(wall: Wall, params: FrameParams): TimberMember[] {
+  private generateWallFrame(wall: Wall, params: FrameParams, openings: Opening[]): TimberMember[] {
     const members: TimberMember[] = [];
     const { studSpacing, wallHeight, studWidth, studDepth, noggings } = params;
 
@@ -30,24 +33,146 @@ export class TimberEngine {
     // Top plate
     members.push(this.createPlate(wall, params, 'top'));
 
-    // Studs
+    if (openings.length === 0) {
+      // No openings — regular studs + noggings
+      const studPositions = this.computeStudPositions(wallLength, studSpacing);
+      this.addFullStuds(members, wall, params, studPositions, dirX, dirZ);
+      if (noggings && studPositions.length >= 2) {
+        this.addNoggings(members, wall, params, studPositions, dirX, dirZ, wallHeight / 2);
+      }
+      return members;
+    }
+
+    // Build opening zones
+    const zones = openings.map(o => ({
+      left: o.position - o.width / 2,
+      right: o.position + o.width / 2,
+      headerY: studWidth + o.sillHeight + o.height,
+      sillY: studWidth + o.sillHeight,
+      opening: o,
+    }));
+
+    // Compute stud positions
     const studPositions = this.computeStudPositions(wallLength, studSpacing);
+
+    // For each stud position: full stud, or cripple studs if inside an opening
     for (const t of studPositions) {
       const baseX = wall.start.x + dirX * t;
       const baseZ = wall.start.z + dirZ * t;
+      const zone = zones.find(z => t > z.left + 0.02 && t < z.right - 0.02);
+
+      if (zone) {
+        // Cripple stud above header
+        if (zone.headerY + studWidth < wallHeight - studWidth) {
+          members.push({
+            start: { x: baseX, y: zone.headerY + studWidth, z: baseZ },
+            end: { x: baseX, y: wallHeight - studWidth, z: baseZ },
+            width: studWidth, depth: studDepth,
+            type: 'cripple_stud', wallId: wall.id,
+          });
+        }
+        // Cripple stud below sill (windows only)
+        if (zone.opening.type === 'window' && zone.sillY - studWidth > studWidth + 0.02) {
+          members.push({
+            start: { x: baseX, y: studWidth, z: baseZ },
+            end: { x: baseX, y: zone.sillY - studWidth, z: baseZ },
+            width: studWidth, depth: studDepth,
+            type: 'cripple_stud', wallId: wall.id,
+          });
+        }
+      } else {
+        // Full-height stud
+        members.push({
+          start: { x: baseX, y: studWidth, z: baseZ },
+          end: { x: baseX, y: wallHeight - studWidth, z: baseZ },
+          width: studWidth, depth: studDepth,
+          type: 'stud', wallId: wall.id,
+        });
+      }
+    }
+
+    // Per-opening framing: king studs, trimmers, header, sill
+    for (const zone of zones) {
+      const lx = wall.start.x + dirX * zone.left;
+      const lz = wall.start.z + dirZ * zone.left;
+      const rx = wall.start.x + dirX * zone.right;
+      const rz = wall.start.z + dirZ * zone.right;
+
+      // King studs (full height at opening edges)
       members.push({
-        start: { x: baseX, y: studWidth, z: baseZ },
-        end: { x: baseX, y: wallHeight - studWidth, z: baseZ },
+        start: { x: lx, y: studWidth, z: lz },
+        end: { x: lx, y: wallHeight - studWidth, z: lz },
         width: studWidth, depth: studDepth,
         type: 'stud', wallId: wall.id,
       });
+      members.push({
+        start: { x: rx, y: studWidth, z: rz },
+        end: { x: rx, y: wallHeight - studWidth, z: rz },
+        width: studWidth, depth: studDepth,
+        type: 'stud', wallId: wall.id,
+      });
+
+      // Trimmer studs (bottom plate to header)
+      const trimLx = lx + dirX * studDepth;
+      const trimLz = lz + dirZ * studDepth;
+      const trimRx = rx - dirX * studDepth;
+      const trimRz = rz - dirZ * studDepth;
+      members.push({
+        start: { x: trimLx, y: studWidth, z: trimLz },
+        end: { x: trimLx, y: zone.headerY, z: trimLz },
+        width: studWidth, depth: studDepth,
+        type: 'trimmer', wallId: wall.id,
+      });
+      members.push({
+        start: { x: trimRx, y: studWidth, z: trimRz },
+        end: { x: trimRx, y: zone.headerY, z: trimRz },
+        width: studWidth, depth: studDepth,
+        type: 'trimmer', wallId: wall.id,
+      });
+
+      // Header (horizontal, spans the opening)
+      members.push({
+        start: { x: lx, y: zone.headerY, z: lz },
+        end: { x: rx, y: zone.headerY, z: rz },
+        width: studWidth, depth: studDepth * 1.5,
+        type: 'header', wallId: wall.id,
+      });
+
+      // Sill plate (windows only)
+      if (zone.opening.type === 'window') {
+        members.push({
+          start: { x: lx, y: zone.sillY, z: lz },
+          end: { x: rx, y: zone.sillY, z: rz },
+          width: studWidth, depth: studDepth,
+          type: 'sill_plate', wallId: wall.id,
+        });
+      }
     }
 
-    // Noggings
-    if (noggings && studPositions.length >= 2) {
+    // Noggings in clear zones (between openings)
+    if (noggings) {
       const noggingY = wallHeight / 2;
-      for (let i = 0; i < studPositions.length - 1; i++) {
-        const t1 = studPositions[i], t2 = studPositions[i + 1];
+      const clearStuds: number[] = [];
+      for (const t of studPositions) {
+        const inOpening = zones.some(z => t > z.left + 0.02 && t < z.right - 0.02);
+        if (!inOpening) clearStuds.push(t);
+      }
+      // Add opening edge positions to get noggings right up to openings
+      for (const z of zones) {
+        clearStuds.push(z.left, z.right);
+      }
+      clearStuds.sort((a, b) => a - b);
+      // Deduplicate
+      const unique = clearStuds.filter((v, i, a) => i === 0 || v - a[i - 1] > 0.02);
+
+      for (let i = 0; i < unique.length - 1; i++) {
+        const t1 = unique[i], t2 = unique[i + 1];
+        // Don't add nogging across an opening
+        const spansOpening = zones.some(z => t1 < z.left && t2 > z.right);
+        const insideOpening = zones.some(z => t1 >= z.left - 0.02 && t2 <= z.right + 0.02);
+        if (spansOpening || insideOpening) continue;
+        if (t2 - t1 < 0.05) continue;
+
         members.push({
           start: { x: wall.start.x + dirX * t1, y: noggingY, z: wall.start.z + dirZ * t1 },
           end: { x: wall.start.x + dirX * t2, y: noggingY, z: wall.start.z + dirZ * t2 },
@@ -60,12 +185,44 @@ export class TimberEngine {
     return members;
   }
 
+  private addFullStuds(
+    members: TimberMember[], wall: Wall, params: FrameParams,
+    positions: number[], dirX: number, dirZ: number,
+  ): void {
+    const { studWidth, studDepth, wallHeight } = params;
+    for (const t of positions) {
+      const x = wall.start.x + dirX * t;
+      const z = wall.start.z + dirZ * t;
+      members.push({
+        start: { x, y: studWidth, z },
+        end: { x, y: wallHeight - studWidth, z },
+        width: studWidth, depth: studDepth,
+        type: 'stud', wallId: wall.id,
+      });
+    }
+  }
+
+  private addNoggings(
+    members: TimberMember[], wall: Wall, params: FrameParams,
+    positions: number[], dirX: number, dirZ: number, y: number,
+  ): void {
+    const { studWidth, studDepth } = params;
+    for (let i = 0; i < positions.length - 1; i++) {
+      const t1 = positions[i], t2 = positions[i + 1];
+      members.push({
+        start: { x: wall.start.x + dirX * t1, y, z: wall.start.z + dirZ * t1 },
+        end: { x: wall.start.x + dirX * t2, y, z: wall.start.z + dirZ * t2 },
+        width: studWidth, depth: studDepth,
+        type: 'nogging', wallId: wall.id,
+      });
+    }
+  }
+
   private generateRoof(walls: Wall[], params: FrameParams): TimberMember[] {
     const members: TimberMember[] = [];
     const roof = params.roof!;
     const { wallHeight, studSpacing, studWidth, studDepth } = params;
 
-    // Find bounding box of exterior walls
     const ext = walls.filter(w => w.wallType === 'exterior');
     if (ext.length === 0) return members;
 
@@ -79,14 +236,12 @@ export class TimberEngine {
 
     const pitchRad = (roof.pitchAngle * Math.PI) / 180;
     const overhang = roof.overhang;
-    const ridgeAxis = roof.ridgeAxis;
 
-    if (ridgeAxis === 'x') {
+    if (roof.ridgeAxis === 'x') {
       const halfSpan = (maxZ - minZ) / 2;
       const ridgeHeight = wallHeight + Math.tan(pitchRad) * halfSpan;
       const ridgeMidZ = (minZ + maxZ) / 2;
 
-      // Ridge beam
       members.push({
         start: { x: minX - overhang, y: ridgeHeight, z: ridgeMidZ },
         end: { x: maxX + overhang, y: ridgeHeight, z: ridgeMidZ },
@@ -94,7 +249,6 @@ export class TimberEngine {
         type: 'ridge_beam', wallId: '',
       });
 
-      // Rafters
       const spanX = maxX - minX;
       const rafterCount = Math.max(1, Math.floor(spanX / studSpacing));
       for (let i = 0; i <= rafterCount; i++) {

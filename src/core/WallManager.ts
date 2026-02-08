@@ -1,9 +1,11 @@
-import { Wall, Point2D } from '../types';
+import { Wall, Point2D, Opening } from '../types';
 
 let nextId = 1;
+let nextOpeningId = 1;
 
 export class WallManager {
   private walls: Map<string, Wall> = new Map();
+  private openings: Map<string, Opening> = new Map();
   onChange: ((walls: Wall[]) => void) | null = null;
 
   addWall(start: Point2D, end: Point2D, wallType: 'exterior' | 'interior' = 'exterior'): Wall {
@@ -16,6 +18,10 @@ export class WallManager {
 
   removeWall(id: string): void {
     this.walls.delete(id);
+    // Remove openings on this wall
+    for (const [oid, o] of this.openings) {
+      if (o.wallId === id) this.openings.delete(oid);
+    }
     this.notify();
   }
 
@@ -33,7 +39,9 @@ export class WallManager {
 
   clear(): void {
     this.walls.clear();
+    this.openings.clear();
     nextId = 1;
+    nextOpeningId = 1;
     this.notify();
   }
 
@@ -43,9 +51,14 @@ export class WallManager {
 
   /** Replace all exterior walls with a rectangle footprint (notifies once) */
   setFootprint(minX: number, minZ: number, maxX: number, maxZ: number): void {
-    // Remove existing exterior walls
+    // Remove existing exterior walls and their openings
     for (const [id, w] of this.walls) {
-      if (w.wallType === 'exterior') this.walls.delete(id);
+      if (w.wallType === 'exterior') {
+        this.walls.delete(id);
+        for (const [oid, o] of this.openings) {
+          if (o.wallId === id) this.openings.delete(oid);
+        }
+      }
     }
 
     // Add 4 walls (clockwise from top-left)
@@ -79,6 +92,38 @@ export class WallManager {
       maxZ = Math.max(maxZ, w.start.z, w.end.z);
     }
     return { minX, maxX, minZ, maxZ };
+  }
+
+  // ─── Openings ───
+
+  addOpening(
+    wallId: string, type: 'window' | 'door',
+    position: number, width: number, height: number, sillHeight: number,
+  ): Opening {
+    const id = `opening-${nextOpeningId++}`;
+    const opening: Opening = { id, wallId, type, position, width, height, sillHeight };
+    this.openings.set(id, opening);
+    this.notify();
+    return opening;
+  }
+
+  removeOpening(id: string): void {
+    this.openings.delete(id);
+    this.notify();
+  }
+
+  getOpenings(): Opening[] {
+    return Array.from(this.openings.values());
+  }
+
+  getOpeningsForWall(wallId: string): Opening[] {
+    return this.getOpenings().filter(o => o.wallId === wallId);
+  }
+
+  clearOpenings(): void {
+    this.openings.clear();
+    nextOpeningId = 1;
+    this.notify();
   }
 
   private notify(): void {

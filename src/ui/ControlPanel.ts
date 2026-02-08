@@ -1,9 +1,10 @@
 import { FrameParams, RoofConfig, Phase, DEFAULT_PARAMS } from '../types';
+import { OpeningConfig } from './OpeningTool';
 
 const PHASE_META: Record<Phase, { label: string; number: string; desc: string; color: string }> = {
   exterior: { label: 'Exterior Walls', number: '1', desc: 'Draw the outline of your building', color: '#e67e22' },
   interior: { label: 'Interior Walls', number: '2', desc: 'Add interior partition walls', color: '#3498db' },
-  openings: { label: 'Openings', number: '3', desc: 'Windows & doors (coming soon)', color: '#9b59b6' },
+  openings: { label: 'Openings', number: '3', desc: 'Place windows and doors on walls', color: '#9b59b6' },
   roof: { label: 'Roof', number: '4', desc: 'Configure your roof shape', color: '#2ecc71' },
   done: { label: 'Complete', number: '✓', desc: 'Your timber frame is ready', color: '#2ecc71' },
 };
@@ -35,6 +36,16 @@ export class ControlPanel {
   private ridgeXBtn!: HTMLButtonElement;
   private ridgeZBtn!: HTMLButtonElement;
 
+  // Opening controls
+  private openingsSection!: HTMLElement;
+  private openingWindowBtn!: HTMLButtonElement;
+  private openingDoorBtn!: HTMLButtonElement;
+  private openingWidthInput!: HTMLInputElement;
+  private openingHeightInput!: HTMLInputElement;
+  private sillHeightRow!: HTMLElement;
+  private sillHeightInput!: HTMLInputElement;
+  private openingCountEl!: HTMLElement;
+
   // Navigation
   private nextBtn!: HTMLButtonElement;
   private backBtn!: HTMLButtonElement;
@@ -46,14 +57,17 @@ export class ControlPanel {
 
   // Phase-specific sections
   private drawingHint!: HTMLElement;
-  private openingsHint!: HTMLElement;
   private paramSection!: HTMLElement;
+
+  // Opening config state
+  private openingConfig: OpeningConfig = { type: 'window', width: 0.9, height: 1.2, sillHeight: 0.9 };
 
   // Callbacks
   onPhaseChange: ((phase: Phase) => void) | null = null;
   onGenerate: (() => void) | null = null;
   onClear: (() => void) | null = null;
   onParamsChange: ((params: FrameParams) => void) | null = null;
+  onOpeningConfigChange: ((config: OpeningConfig) => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -68,6 +82,10 @@ export class ControlPanel {
 
   getCurrentPhase(): Phase {
     return this.currentPhase;
+  }
+
+  getOpeningConfig(): OpeningConfig {
+    return { ...this.openingConfig };
   }
 
   setPhase(phase: Phase): void {
@@ -85,6 +103,10 @@ export class ControlPanel {
       this.backendIndicator.style.color = '#e67e22';
       this.backendIndicator.style.borderColor = '#e67e22';
     }
+  }
+
+  updateOpeningCount(count: number): void {
+    this.openingCountEl.textContent = `${count} opening${count !== 1 ? 's' : ''} placed`;
   }
 
   updateStats(frame: { studs: number; plates: number; noggings: number; rafters: number; total: number } | null, wallCount: number): void {
@@ -159,13 +181,8 @@ export class ControlPanel {
     this.drawingHint.className = 'drawing-hint';
     this.container.appendChild(this.drawingHint);
 
-    // Openings hint (shown during openings phase)
-    this.openingsHint = document.createElement('div');
-    this.openingsHint.className = 'openings-hint';
-    this.openingsHint.innerHTML = `
-      <div class="hint-item coming-soon">Window and door placement will be available in a future update. Press Next to continue.</div>
-    `;
-    this.container.appendChild(this.openingsHint);
+    // Openings section
+    this.buildOpeningsSection();
 
     // Roof configuration section
     this.roofSection = document.createElement('div');
@@ -175,15 +192,12 @@ export class ControlPanel {
     roofTitle.textContent = 'Roof Configuration';
     this.roofSection.appendChild(roofTitle);
 
-    // Pitch slider
     const pitchResult = this.addSlider(this.roofSection, 'Pitch Angle', 30, 10, 60, 1, '°');
     this.pitchInput = pitchResult.input;
 
-    // Overhang slider
     const overhangResult = this.addSlider(this.roofSection, 'Overhang', 300, 0, 1000, 50, 'mm');
     this.overhangInput = overhangResult.input;
 
-    // Ridge axis toggle
     const axisRow = document.createElement('div');
     axisRow.className = 'axis-toggle';
     const axisLabel = document.createElement('div');
@@ -231,7 +245,6 @@ export class ControlPanel {
     const snapResult = this.addSlider(this.paramSection, 'Grid Snap', this.params.gridSnap * 1000, 50, 1000, 50, 'mm');
     this.gridSnapInput = snapResult.input;
 
-    // Noggings checkbox
     const nogRow = document.createElement('div');
     nogRow.className = 'param-row';
     const nogLabel = document.createElement('label');
@@ -287,6 +300,97 @@ export class ControlPanel {
     this.container.appendChild(help);
   }
 
+  private buildOpeningsSection(): void {
+    this.openingsSection = document.createElement('div');
+    this.openingsSection.className = 'panel-section openings-section';
+
+    // Type toggle
+    const typeLabel = document.createElement('h3');
+    typeLabel.textContent = 'Opening Type';
+    this.openingsSection.appendChild(typeLabel);
+
+    const typeBtns = document.createElement('div');
+    typeBtns.className = 'axis-buttons';
+    this.openingWindowBtn = document.createElement('button');
+    this.openingWindowBtn.className = 'btn btn-opening active';
+    this.openingWindowBtn.textContent = 'Window';
+    this.openingWindowBtn.addEventListener('click', () => this.setOpeningType('window'));
+    this.openingDoorBtn = document.createElement('button');
+    this.openingDoorBtn.className = 'btn btn-opening';
+    this.openingDoorBtn.textContent = 'Door';
+    this.openingDoorBtn.addEventListener('click', () => this.setOpeningType('door'));
+    typeBtns.appendChild(this.openingWindowBtn);
+    typeBtns.appendChild(this.openingDoorBtn);
+    this.openingsSection.appendChild(typeBtns);
+
+    // Width slider
+    const widthResult = this.addSlider(this.openingsSection, 'Width', 900, 400, 2400, 50, 'mm');
+    this.openingWidthInput = widthResult.input;
+    this.openingWidthInput.addEventListener('input', () => this.readOpeningConfig());
+
+    // Height slider
+    const heightResult = this.addSlider(this.openingsSection, 'Height', 1200, 400, 2400, 50, 'mm');
+    this.openingHeightInput = heightResult.input;
+    this.openingHeightInput.addEventListener('input', () => this.readOpeningConfig());
+
+    // Sill height slider (windows only)
+    this.sillHeightRow = document.createElement('div');
+    this.sillHeightRow.className = 'slider-row';
+    const sillResult = this.addSlider(this.openingsSection, 'Sill Height', 900, 200, 1500, 50, 'mm');
+    this.sillHeightInput = sillResult.input;
+    this.sillHeightRow = sillResult.input.parentElement!;
+    this.sillHeightInput.addEventListener('input', () => this.readOpeningConfig());
+
+    // Hints
+    const hint = document.createElement('div');
+    hint.className = 'drawing-hint';
+    hint.innerHTML = `
+      <div class="hint-item">Click near a wall to place</div>
+      <div class="hint-item">Click on an opening to remove it</div>
+    `;
+    this.openingsSection.appendChild(hint);
+
+    // Count
+    this.openingCountEl = document.createElement('div');
+    this.openingCountEl.className = 'opening-count';
+    this.openingCountEl.textContent = '0 openings placed';
+    this.openingsSection.appendChild(this.openingCountEl);
+
+    this.container.appendChild(this.openingsSection);
+  }
+
+  private setOpeningType(type: 'window' | 'door'): void {
+    this.openingWindowBtn.classList.toggle('active', type === 'window');
+    this.openingDoorBtn.classList.toggle('active', type === 'door');
+
+    // Update height default when switching type
+    if (type === 'door') {
+      this.openingHeightInput.value = '2100';
+      const span = this.openingHeightInput.parentElement?.querySelector('.slider-value');
+      if (span) span.textContent = '2100 mm';
+    } else {
+      this.openingHeightInput.value = '1200';
+      const span = this.openingHeightInput.parentElement?.querySelector('.slider-value');
+      if (span) span.textContent = '1200 mm';
+    }
+
+    // Show/hide sill height
+    this.sillHeightRow.style.display = type === 'window' ? 'flex' : 'none';
+
+    this.readOpeningConfig();
+  }
+
+  private readOpeningConfig(): void {
+    const type = this.openingWindowBtn.classList.contains('active') ? 'window' as const : 'door' as const;
+    this.openingConfig = {
+      type,
+      width: parseFloat(this.openingWidthInput.value) / 1000,
+      height: parseFloat(this.openingHeightInput.value) / 1000,
+      sillHeight: type === 'door' ? 0 : parseFloat(this.sillHeightInput.value) / 1000,
+    };
+    this.onOpeningConfigChange?.(this.openingConfig);
+  }
+
   private updatePhaseUI(): void {
     const meta = PHASE_META[this.currentPhase];
     const curIdx = PHASE_ORDER.indexOf(this.currentPhase);
@@ -305,7 +409,7 @@ export class ControlPanel {
     this.phaseTitle.style.color = meta.color;
     this.phaseDesc.textContent = meta.desc;
 
-    // Show/hide sections + per-phase drawing hints
+    // Show/hide sections per phase
     if (this.currentPhase === 'exterior') {
       this.drawingHint.innerHTML = `
         <div class="hint-item">Click and drag to draw the footprint</div>
@@ -322,7 +426,7 @@ export class ControlPanel {
     } else {
       this.drawingHint.style.display = 'none';
     }
-    this.openingsHint.style.display = this.currentPhase === 'openings' ? 'block' : 'none';
+    this.openingsSection.style.display = this.currentPhase === 'openings' ? 'flex' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
 
     // Immediately apply roof config when entering roof phase for live preview
@@ -359,7 +463,6 @@ export class ControlPanel {
     }
 
     if (this.currentPhase === 'roof') {
-      // Roof is already live-previewed — just transition to done
       this.currentPhase = 'done';
       this.updatePhaseUI();
       this.onPhaseChange?.(this.currentPhase);
@@ -386,7 +489,6 @@ export class ControlPanel {
   private setRidgeAxis(axis: 'x' | 'z'): void {
     this.ridgeXBtn.classList.toggle('active', axis === 'x');
     this.ridgeZBtn.classList.toggle('active', axis === 'z');
-    // Trigger live update when toggling during roof phase
     if (this.currentPhase === 'roof') {
       this.readParams();
     }
@@ -450,7 +552,6 @@ export class ControlPanel {
       studDepth: parseFloat(this.studDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
-      // Live-build roof config when in roof or done phase
       roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')
         ? this.buildRoofConfig()
         : this.params.roof,
