@@ -172,6 +172,11 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
+// Wire: cancel drawing from control panel button
+controlPanel.onCancelDrawing = () => {
+  drawingTool.cancelDrawing();
+};
+
 // ─── Mobile pull-up handle ───
 
 const pullHandle = document.createElement('div');
@@ -182,6 +187,11 @@ controlsContainer.prepend(pullHandle);
 pullHandle.addEventListener('click', () => {
   controlsContainer.classList.toggle('panel-open');
 });
+
+// Update dimension labels every frame so they track the camera
+sceneManager.onUpdate = () => {
+  footprintTool.updateDimensionLabels();
+};
 
 // Start in exterior phase with footprint tool
 footprintTool.enable();

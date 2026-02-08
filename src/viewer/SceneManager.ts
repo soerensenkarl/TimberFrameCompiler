@@ -110,11 +110,15 @@ export class SceneManager {
     this.setupTouchNavigation();
   }
 
+  /** Callbacks invoked every frame (for label tracking, etc.) */
+  onUpdate: (() => void) | null = null;
+
   start(): void {
     const animate = () => {
       requestAnimationFrame(animate);
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
+      this.onUpdate?.();
     };
     animate();
   }

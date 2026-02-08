@@ -188,6 +188,11 @@ body {
   display: none;
 }
 
+.btn-cancel-draw {
+  margin-top: 8px;
+  width: 100%;
+}
+
 .hint-item kbd {
   display: inline-block;
   padding: 1px 6px;

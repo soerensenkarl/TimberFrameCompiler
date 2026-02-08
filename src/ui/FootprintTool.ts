@@ -287,6 +287,9 @@ export class FootprintTool {
         this.widthLabel.style.display = 'none';
         this.depthLabel.style.display = 'none';
       }
+      if (this.resizing) {
+        this.sceneManager.controls.enabled = true;
+      }
       this.resizing = null;
       return;
     }
@@ -300,6 +303,7 @@ export class FootprintTool {
       if (hit) {
         e.preventDefault();
         this.resizing = hit;
+        this.sceneManager.controls.enabled = false;
         return;
       }
     }
@@ -319,10 +323,14 @@ export class FootprintTool {
   }
 
   private onTouchEnd(e: TouchEvent): void {
-    if (!this.resizing && !this.touchActive) return;
+    const wasResizing = this.resizing;
+    if (!wasResizing && !this.touchActive) return;
     e.preventDefault();
     const t = e.changedTouches[0];
     this.onMouseUp(new MouseEvent('mouseup', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
+    if (wasResizing) {
+      this.sceneManager.controls.enabled = true;
+    }
   }
 
   // ─── Raycasting ───
@@ -414,7 +422,7 @@ export class FootprintTool {
     this.arrowZ.visible = true;
   }
 
-  private updateDimensionLabels(): void {
+  updateDimensionLabels(): void {
     if (!this.footprint) {
       this.widthLabel.style.display = 'none';
       this.depthLabel.style.display = 'none';
