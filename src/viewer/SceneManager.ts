@@ -47,6 +47,12 @@ export class SceneManager {
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 1, 0);
 
+    // Touch: single finger reserved for tools, two-finger = zoom + rotate
+    this.controls.touches = {
+      ONE: undefined as unknown as THREE.TOUCH,
+      TWO: THREE.TOUCH.DOLLY_ROTATE,
+    };
+
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambientLight);

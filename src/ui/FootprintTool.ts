@@ -78,6 +78,9 @@ export class FootprintTool {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.onTouchEnd = this.onTouchEnd.bind(this);
   }
 
   setGridSnap(snap: number): void {
@@ -92,6 +95,9 @@ export class FootprintTool {
     canvas.addEventListener('mousedown', this.onMouseDown);
     canvas.addEventListener('mousemove', this.onMouseMove);
     canvas.addEventListener('mouseup', this.onMouseUp);
+    canvas.addEventListener('touchstart', this.onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', this.onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', this.onTouchEnd, { passive: false });
 
     // If exterior walls already exist, enter placed state
     const bounds = this.wallManager.getExteriorBounds();
@@ -112,6 +118,9 @@ export class FootprintTool {
     canvas.removeEventListener('mousedown', this.onMouseDown);
     canvas.removeEventListener('mousemove', this.onMouseMove);
     canvas.removeEventListener('mouseup', this.onMouseUp);
+    canvas.removeEventListener('touchstart', this.onTouchStart);
+    canvas.removeEventListener('touchmove', this.onTouchMove);
+    canvas.removeEventListener('touchend', this.onTouchEnd);
 
     this.snapIndicator.visible = false;
     this.arrowX.visible = false;
@@ -259,6 +268,28 @@ export class FootprintTool {
     if (this.resizing) {
       this.resizing = null;
     }
+  }
+
+  // ─── Touch handlers ───
+
+  private onTouchStart(e: TouchEvent): void {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    this.onMouseDown(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
+  }
+
+  private onTouchMove(e: TouchEvent): void {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
+  }
+
+  private onTouchEnd(e: TouchEvent): void {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    this.onMouseUp(new MouseEvent('mouseup', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
   }
 
   // ─── Raycasting ───

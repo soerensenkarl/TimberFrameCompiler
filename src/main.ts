@@ -171,6 +171,36 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
+// ─── Mobile mode toggle ───
+
+const mobileToggle = document.createElement('button');
+mobileToggle.className = 'mobile-toggle';
+mobileToggle.title = 'Toggle mobile layout';
+mobileToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="1" width="14" height="22" rx="2"/><line x1="9" y1="19" x2="15" y2="19"/></svg>`;
+viewport.appendChild(mobileToggle);
+
+const panelHandle = document.createElement('div');
+panelHandle.className = 'panel-handle';
+panelHandle.innerHTML = '<div class="panel-handle-bar"></div>';
+controlsContainer.prepend(panelHandle);
+
+mobileToggle.addEventListener('click', () => {
+  const entering = !document.body.classList.contains('mobile-mode');
+  document.body.classList.toggle('mobile-mode', entering);
+  mobileToggle.classList.toggle('active', entering);
+  if (entering) {
+    controlsContainer.classList.add('collapsed');
+  } else {
+    controlsContainer.classList.remove('collapsed');
+  }
+  setTimeout(() => sceneManager.resize(), 350);
+});
+
+panelHandle.addEventListener('click', () => {
+  controlsContainer.classList.toggle('collapsed');
+  setTimeout(() => sceneManager.resize(), 350);
+});
+
 // Start in exterior phase with footprint tool
 footprintTool.enable();
 sceneManager.start();

@@ -529,3 +529,139 @@ body {
   letter-spacing: 0.3px;
   z-index: 10;
 }
+
+/* ─── Canvas touch ─── */
+
+#viewport canvas {
+  touch-action: none;
+}
+
+/* ─── Mobile toggle button ─── */
+
+.mobile-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(26, 26, 46, 0.85);
+  border: 1px solid #2a2a4a;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.mobile-toggle:hover {
+  background: rgba(26, 26, 46, 0.95);
+  color: #e0e0e0;
+  border-color: #e67e22;
+}
+
+.mobile-toggle.active {
+  color: #e67e22;
+  border-color: #e67e22;
+}
+
+.mobile-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ─── Panel handle (mobile only) ─── */
+
+.panel-handle {
+  display: none;
+  width: 100%;
+  padding: 10px 0 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.panel-handle-bar {
+  width: 40px;
+  height: 4px;
+  background: #555;
+  border-radius: 2px;
+  margin: 0 auto;
+  transition: background 0.2s;
+}
+
+.panel-handle:active .panel-handle-bar {
+  background: #e67e22;
+}
+
+/* ─── Mobile mode ─── */
+
+body.mobile-mode #app {
+  flex-direction: column;
+}
+
+body.mobile-mode #viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+body.mobile-mode #controls {
+  width: 100%;
+  min-width: unset;
+  max-height: 50vh;
+  border-left: none;
+  border-top: 1px solid #2a2a4a;
+  transition: max-height 0.3s ease;
+  overflow-y: auto;
+}
+
+body.mobile-mode #controls.collapsed {
+  max-height: 52px;
+  overflow: hidden;
+}
+
+body.mobile-mode .panel-handle {
+  display: block;
+}
+
+body.mobile-mode .panel-title {
+  display: none;
+}
+
+body.mobile-mode .help-text {
+  display: none;
+}
+
+/* Larger touch targets in mobile mode */
+
+body.mobile-mode .btn {
+  padding: 14px 18px;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+body.mobile-mode .btn-opening,
+body.mobile-mode .btn-axis {
+  padding: 10px 14px;
+  min-height: 44px;
+}
+
+body.mobile-mode .phase-step {
+  padding: 10px 4px 8px;
+}
+
+body.mobile-mode .slider-row input[type="range"] {
+  height: 8px;
+}
+
+body.mobile-mode .slider-row input[type="range"]::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+}
+
+body.mobile-mode .slider-row input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+}

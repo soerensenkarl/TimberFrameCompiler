@@ -22,6 +22,7 @@ export class DrawingTool {
   private snapIndicator: THREE.Mesh;
   private dimensionLabel: HTMLDivElement;
   private enabled = false;
+  private touchStartPos: { x: number; y: number } | null = null;
 
   onStatusChange: ((status: string) => void) | null = null;
 
@@ -45,6 +46,9 @@ export class DrawingTool {
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.onTouchEnd = this.onTouchEnd.bind(this);
   }
 
   setGridSnap(snap: number): void {
@@ -63,6 +67,9 @@ export class DrawingTool {
     const canvas = this.sceneManager.renderer.domElement;
     canvas.addEventListener('mousemove', this.onMouseMove);
     canvas.addEventListener('click', this.onClick);
+    canvas.addEventListener('touchstart', this.onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', this.onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', this.onTouchEnd, { passive: false });
     document.addEventListener('keydown', this.onKeyDown);
   }
 
@@ -72,6 +79,9 @@ export class DrawingTool {
     const canvas = this.sceneManager.renderer.domElement;
     canvas.removeEventListener('mousemove', this.onMouseMove);
     canvas.removeEventListener('click', this.onClick);
+    canvas.removeEventListener('touchstart', this.onTouchStart);
+    canvas.removeEventListener('touchmove', this.onTouchMove);
+    canvas.removeEventListener('touchend', this.onTouchEnd);
     document.removeEventListener('keydown', this.onKeyDown);
     this.cancelDrawing();
     this.snapIndicator.visible = false;
@@ -135,6 +145,34 @@ export class DrawingTool {
   private onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.cancelDrawing();
+    }
+  }
+
+  // ─── Touch handlers ───
+
+  private onTouchStart(e: TouchEvent): void {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    this.touchStartPos = { x: t.clientX, y: t.clientY };
+  }
+
+  private onTouchMove(e: TouchEvent): void {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
+  }
+
+  private onTouchEnd(e: TouchEvent): void {
+    if (!this.touchStartPos) return;
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    const dx = t.clientX - this.touchStartPos.x;
+    const dy = t.clientY - this.touchStartPos.y;
+    this.touchStartPos = null;
+    if (Math.sqrt(dx * dx + dy * dy) < 15) {
+      this.onClick(new MouseEvent('click', { clientX: t.clientX, clientY: t.clientY }));
     }
   }
 
