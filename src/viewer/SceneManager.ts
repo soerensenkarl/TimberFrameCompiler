@@ -55,10 +55,9 @@ export class SceneManager {
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 1, 0);
 
-    // Disable OrbitControls touch — we handle two-finger gestures ourselves
-    // so we can combine pan + zoom + rotate in a single gesture
+    // Touch: single finger = orbit by default, two-finger handled by us (pan + zoom)
     this.controls.touches = {
-      ONE: undefined as unknown as THREE.TOUCH,
+      ONE: THREE.TOUCH.ROTATE,
       TWO: undefined as unknown as THREE.TOUCH,
     };
 
@@ -135,7 +134,15 @@ export class SceneManager {
     this.scene.add(this.gridHelper);
   }
 
-  // ─── Custom two-finger touch navigation ───
+  /** Toggle single-finger touch: true = tool draws, false = orbit */
+  setTouchToolMode(active: boolean): void {
+    this.controls.touches = {
+      ONE: active ? undefined as unknown as THREE.TOUCH : THREE.TOUCH.ROTATE,
+      TWO: undefined as unknown as THREE.TOUCH,
+    };
+  }
+
+  // ─── Custom two-finger touch navigation (pan + zoom) ───
 
   private setupTouchNavigation(): void {
     const canvas = this.renderer.domElement;
@@ -190,17 +197,7 @@ export class SceneManager {
       }
     }
 
-    // Rotate (twist): orbit camera around target on the Y axis
-    let dAngle = curr.angle - prev.angle;
-    if (dAngle > Math.PI) dAngle -= 2 * Math.PI;
-    if (dAngle < -Math.PI) dAngle += 2 * Math.PI;
-    const spherical = new THREE.Spherical().setFromVector3(offset);
-    spherical.theta -= dAngle;
-    offset.setFromSpherical(spherical);
-
-    // Apply zoom + rotation
     this.camera.position.copy(this.controls.target).add(offset);
-    this.camera.lookAt(this.controls.target);
 
     // Pan (two-finger drag): translate camera + target together
     const dcx = curr.cx - prev.cx;

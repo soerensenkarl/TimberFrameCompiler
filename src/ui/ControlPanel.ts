@@ -303,7 +303,6 @@ export class ControlPanel {
       <strong>Controls:</strong><br/>
       Left click: Draw walls<br/>
       Right drag: Rotate &middot; Middle drag: Pan<br/>
-      Touch: drag pan, pinch zoom, twist rotate<br/>
       Scroll: Zoom &middot; Escape: Cancel
     `;
     this.container.appendChild(help);

@@ -104,6 +104,29 @@ async function regenerate(): Promise<void> {
   controlPanel.updateOpeningCount(openings.length);
 }
 
+// ─── Draw-mode toggle for touch devices ───
+
+const drawToggle = document.createElement('button');
+drawToggle.className = 'draw-toggle';
+drawToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
+drawToggle.style.display = 'none';
+viewport.appendChild(drawToggle);
+
+let touchDrawActive = false;
+let activeToolRef: { setTouchActive: (a: boolean) => void } | null = null;
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+function setTouchDrawMode(active: boolean): void {
+  touchDrawActive = active;
+  drawToggle.classList.toggle('active', active);
+  sceneManager.setTouchToolMode(active);
+  activeToolRef?.setTouchActive(active);
+}
+
+drawToggle.addEventListener('click', () => {
+  setTouchDrawMode(!touchDrawActive);
+});
+
 // Phase transition handler
 function onPhaseChange(phase: Phase): void {
   // Disable all tools first
@@ -112,23 +135,33 @@ function onPhaseChange(phase: Phase): void {
   drawingTool.disable();
   openingTool.disable();
 
+  // Reset touch draw mode
+  setTouchDrawMode(false);
+  activeToolRef = null;
+
   switch (phase) {
     case 'exterior':
       footprintTool.enable();
+      activeToolRef = footprintTool;
       break;
     case 'interior':
       drawingTool.setWallType('interior');
       drawingTool.enable();
+      activeToolRef = drawingTool;
       break;
     case 'openings':
       openingTool.setConfig(controlPanel.getOpeningConfig());
       openingTool.enable();
+      activeToolRef = openingTool;
       break;
     case 'roof':
       break;
     case 'done':
       break;
   }
+
+  // Show draw toggle on touch devices when a tool is active
+  drawToggle.style.display = (activeToolRef && isTouchDevice) ? 'flex' : 'none';
 
   // Re-render frame preview whenever phase changes
   regenerate();
@@ -289,4 +322,6 @@ controlPanel.onLoadExample = () => loadExampleHouse();
 
 // Start in exterior phase with footprint tool
 footprintTool.enable();
+activeToolRef = footprintTool;
+drawToggle.style.display = isTouchDevice ? 'flex' : 'none';
 sceneManager.start();

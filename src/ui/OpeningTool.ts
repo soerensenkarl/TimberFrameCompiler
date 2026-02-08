@@ -33,6 +33,7 @@ export class OpeningTool {
   private placedMeshes: Map<string, THREE.Mesh> = new Map();
 
   private enabled = false;
+  private touchActive = false;
   private touchStartPos: { x: number; y: number } | null = null;
 
   constructor(sceneManager: SceneManager, wallManager: WallManager) {
@@ -48,6 +49,10 @@ export class OpeningTool {
     this.onTouchStart = this.onTouchStart.bind(this);
     this.onTouchMove = this.onTouchMove.bind(this);
     this.onTouchEnd = this.onTouchEnd.bind(this);
+  }
+
+  setTouchActive(active: boolean): void {
+    this.touchActive = active;
   }
 
   setConfig(config: OpeningConfig): void {
@@ -176,21 +181,21 @@ export class OpeningTool {
   // ─── Touch handlers ───
 
   private onTouchStart(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.touchStartPos = { x: t.clientX, y: t.clientY };
   }
 
   private onTouchMove(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
   }
 
   private onTouchEnd(e: TouchEvent): void {
-    if (!this.touchStartPos) return;
+    if (!this.touchStartPos || !this.touchActive) return;
     e.preventDefault();
     const t = e.changedTouches[0];
     const dx = t.clientX - this.touchStartPos.x;
