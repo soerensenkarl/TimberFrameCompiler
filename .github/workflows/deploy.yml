@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/generative-timber-design-Iau9t]
+    branches: [main, claude/dev-branch-mobile-testing-9q6So]
 
 permissions:
   contents: read
