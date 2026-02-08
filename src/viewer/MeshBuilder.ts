@@ -21,14 +21,23 @@ export class MeshBuilder {
   buildFrame(frame: TimberFrame): THREE.Group {
     const group = new THREE.Group();
     group.name = 'generatedFrame';
+
+    // Build wall direction lookup so vertical members can orient to their wall normal
+    const wallDirectionAngle = new Map<string, number>();
+    for (const wall of frame.sourceWalls) {
+      const wdx = wall.end.x - wall.start.x;
+      const wdz = wall.end.z - wall.start.z;
+      wallDirectionAngle.set(wall.id, Math.atan2(wdx, wdz));
+    }
+
     for (const member of frame.members) {
-      const mesh = this.buildMember(member);
+      const mesh = this.buildMember(member, wallDirectionAngle);
       group.add(mesh);
     }
     return group;
   }
 
-  private buildMember(member: TimberMember): THREE.Mesh {
+  private buildMember(member: TimberMember, wallDirectionAngle: Map<string, number>): THREE.Mesh {
     const dx = member.end.x - member.start.x;
     const dy = member.end.y - member.start.y;
     const dz = member.end.z - member.start.z;
@@ -47,7 +56,21 @@ export class MeshBuilder {
     );
 
     if (Math.abs(dy) > 0.99 * length) {
-      mesh.rotation.x = Math.PI / 2;
+      // Vertical member (stud): align depth face with wall normal
+      const wallAngle = wallDirectionAngle.get(member.wallId) ?? 0;
+      const dirX = Math.sin(wallAngle);
+      const dirZ = Math.cos(wallAngle);
+      // Wall normal perpendicular to wall direction in XZ plane
+      const normalX = -dirZ;
+      const normalZ = dirX;
+      // Rotation matrix columns: X→normal, Y→wallDir, Z→up
+      const m4 = new THREE.Matrix4();
+      m4.makeBasis(
+        new THREE.Vector3(normalX, 0, normalZ),
+        new THREE.Vector3(dirX, 0, dirZ),
+        new THREE.Vector3(0, 1, 0),
+      );
+      mesh.setRotationFromMatrix(m4);
     } else if (Math.abs(dy) < 0.01) {
       const angle = Math.atan2(dx, dz);
       mesh.rotation.y = angle;
