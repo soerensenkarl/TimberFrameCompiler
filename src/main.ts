@@ -95,6 +95,18 @@ drawToggle.addEventListener('click', () => {
   setTouchDrawMode(!touchDrawActive);
 });
 
+// ─── Cancel wall button (viewport overlay, top-left) ───
+
+const cancelBtn = document.createElement('button');
+cancelBtn.className = 'btn-cancel-draw';
+cancelBtn.textContent = 'Cancel Wall';
+cancelBtn.style.display = 'none';
+viewport.appendChild(cancelBtn);
+
+cancelBtn.addEventListener('click', () => {
+  drawingTool.cancelDrawing();
+});
+
 // Phase transition handler
 function onPhaseChange(phase: Phase): void {
   // Disable all tools first
@@ -130,6 +142,9 @@ function onPhaseChange(phase: Phase): void {
 
   // Show draw toggle on touch devices when a tool is active
   drawToggle.style.display = (activeToolRef && isTouchDevice) ? 'flex' : 'none';
+
+  // Show cancel button during interior phase
+  cancelBtn.style.display = phase === 'interior' ? 'block' : 'none';
 
   // Re-render frame preview whenever phase changes
   regenerate();
@@ -170,11 +185,6 @@ controlPanel.onParamsChange = (params) => {
 // Wire: opening config changes from control panel
 controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
-};
-
-// Wire: cancel drawing from control panel button
-controlPanel.onCancelDrawing = () => {
-  drawingTool.cancelDrawing();
 };
 
 // ─── Mobile pull-up handle ───
