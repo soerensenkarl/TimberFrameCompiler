@@ -422,7 +422,7 @@ export class FootprintTool {
     this.arrowZ.visible = true;
   }
 
-  private updateDimensionLabels(): void {
+  updateDimensionLabels(): void {
     if (!this.footprint) {
       this.widthLabel.style.display = 'none';
       this.depthLabel.style.display = 'none';

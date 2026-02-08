@@ -183,6 +183,11 @@ pullHandle.addEventListener('click', () => {
   controlsContainer.classList.toggle('panel-open');
 });
 
+// Update dimension labels every frame so they track the camera
+sceneManager.onUpdate = () => {
+  footprintTool.updateDimensionLabels();
+};
+
 // Start in exterior phase with footprint tool
 footprintTool.enable();
 activeToolRef = footprintTool;
