@@ -176,7 +176,7 @@ controlPanel.onOpeningConfigChange = (config) => {
 
 const pullHandle = document.createElement('div');
 pullHandle.className = 'pull-handle';
-pullHandle.innerHTML = `<div class="pull-handle-bar"></div><svg class="pull-handle-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`;
+pullHandle.innerHTML = `<svg class="pull-handle-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg><div class="pull-handle-bar"></div>`;
 controlsContainer.prepend(pullHandle);
 
 pullHandle.addEventListener('click', () => {

@@ -588,8 +588,8 @@ body {
 }
 
 .pull-handle-arrow {
-  width: 18px;
-  height: 18px;
+  width: 32px;
+  height: 32px;
   color: #888;
   transition: transform 0.25s ease, color 0.2s;
 }
@@ -614,7 +614,7 @@ body {
     min-width: unset;
     max-height: 65vh;
     z-index: 25;
-    transform: translateY(calc(100% - 44px));
+    transform: translateY(calc(100% - 56px));
     transition: transform 0.25s ease;
     border-left: none;
     border-top: 1px solid #2a2a4a;
