@@ -67,7 +67,6 @@ export class ControlPanel {
   onClear: (() => void) | null = null;
   onParamsChange: ((params: FrameParams) => void) | null = null;
   onOpeningConfigChange: ((config: OpeningConfig) => void) | null = null;
-  onCancelDrawing: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -403,11 +402,6 @@ export class ControlPanel {
         <div class="hint-item">Walls chain automatically</div>
         <div class="hint-item">Press <kbd>Esc</kbd> to finish chain</div>
       `;
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'btn btn-secondary btn-cancel-draw';
-      cancelBtn.textContent = 'Cancel Wall';
-      cancelBtn.addEventListener('click', () => this.onCancelDrawing?.());
-      this.drawingHint.appendChild(cancelBtn);
       this.drawingHint.style.display = 'block';
     } else {
       this.drawingHint.style.display = 'none';
