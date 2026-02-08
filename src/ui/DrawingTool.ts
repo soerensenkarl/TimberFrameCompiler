@@ -1,12 +1,18 @@
 import * as THREE from 'three';
 import { SceneManager } from '../viewer/SceneManager';
 import { WallManager } from '../core/WallManager';
-import { Point2D } from '../types';
+import { Point2D, Phase } from '../types';
+
+const PHASE_COLORS: Record<string, number> = {
+  exterior: 0xe67e22,
+  interior: 0x3498db,
+};
 
 export class DrawingTool {
   private sceneManager: SceneManager;
   private wallManager: WallManager;
   private gridSnap: number;
+  private wallType: 'exterior' | 'interior' = 'exterior';
 
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
@@ -17,7 +23,6 @@ export class DrawingTool {
   private dimensionLabel: HTMLDivElement;
   private enabled = false;
 
-  // Callbacks
   onStatusChange: ((status: string) => void) | null = null;
 
   constructor(sceneManager: SceneManager, wallManager: WallManager, gridSnap: number) {
@@ -25,14 +30,12 @@ export class DrawingTool {
     this.wallManager = wallManager;
     this.gridSnap = gridSnap;
 
-    // Create snap indicator (small sphere at cursor position)
-    const indicatorGeo = new THREE.SphereGeometry(0.05, 16, 16);
+    const indicatorGeo = new THREE.SphereGeometry(0.06, 16, 16);
     const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xe67e22 });
     this.snapIndicator = new THREE.Mesh(indicatorGeo, indicatorMat);
     this.snapIndicator.visible = false;
     this.sceneManager.scene.add(this.snapIndicator);
 
-    // Create HTML dimension label overlay
     this.dimensionLabel = document.createElement('div');
     this.dimensionLabel.className = 'dimension-label';
     this.dimensionLabel.style.display = 'none';
@@ -48,6 +51,12 @@ export class DrawingTool {
     this.gridSnap = snap;
   }
 
+  setWallType(type: 'exterior' | 'interior'): void {
+    this.wallType = type;
+    const color = PHASE_COLORS[type];
+    (this.snapIndicator.material as THREE.MeshBasicMaterial).color.setHex(color);
+  }
+
   enable(): void {
     if (this.enabled) return;
     this.enabled = true;
@@ -55,7 +64,6 @@ export class DrawingTool {
     canvas.addEventListener('mousemove', this.onMouseMove);
     canvas.addEventListener('click', this.onClick);
     document.addEventListener('keydown', this.onKeyDown);
-    this.updateStatus();
   }
 
   disable(): void {
@@ -77,7 +85,6 @@ export class DrawingTool {
       this.previewLine = null;
     }
     this.dimensionLabel.style.display = 'none';
-    this.updateStatus();
   }
 
   private onMouseMove(event: MouseEvent): void {
@@ -88,14 +95,12 @@ export class DrawingTool {
       return;
     }
 
-    // Update snap indicator
     this.snapIndicator.position.set(point.x, 0.01, point.z);
     this.snapIndicator.visible = true;
 
-    // Update preview line and dimension label if we have a first point
     if (this.firstPoint) {
       this.updatePreviewLine(this.firstPoint, point);
-      this.updateDimensionLabel(this.firstPoint, point, event);
+      this.updateDimensionLabel(this.firstPoint, point);
     } else {
       this.dimensionLabel.style.display = 'none';
     }
@@ -106,31 +111,24 @@ export class DrawingTool {
     if (!point) return;
 
     if (!this.firstPoint) {
-      // First click: set start point
       this.firstPoint = point;
-      this.updateStatus();
     } else {
-      // Second click: create wall
       const start = this.firstPoint;
       const end = point;
 
-      // Don't create zero-length walls
       const dx = end.x - start.x;
       const dz = end.z - start.z;
       if (Math.sqrt(dx * dx + dz * dz) < 0.05) return;
 
-      this.wallManager.addWall(start, end);
+      this.wallManager.addWall(start, end, this.wallType);
 
-      // Clean up preview
       if (this.previewLine) {
         this.sceneManager.wallPreviewGroup.remove(this.previewLine);
         this.previewLine.geometry.dispose();
         this.previewLine = null;
       }
 
-      // Reset for next wall — start from the end of the current wall
       this.firstPoint = end;
-      this.updateStatus();
     }
   }
 
@@ -153,8 +151,6 @@ export class DrawingTool {
     if (intersects.length === 0) return null;
 
     const hit = intersects[0].point;
-
-    // Snap to grid
     const x = Math.round(hit.x / this.gridSnap) * this.gridSnap;
     const z = Math.round(hit.z / this.gridSnap) * this.gridSnap;
 
@@ -172,19 +168,16 @@ export class DrawingTool {
       new THREE.Vector3(end.x, 0.02, end.z),
     ];
 
+    const color = PHASE_COLORS[this.wallType] ?? 0xe67e22;
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineDashedMaterial({
-      color: 0xe67e22,
-      dashSize: 0.15,
-      gapSize: 0.08,
-    });
+    const material = new THREE.LineDashedMaterial({ color, dashSize: 0.15, gapSize: 0.08 });
 
     this.previewLine = new THREE.Line(geometry, material);
     this.previewLine.computeLineDistances();
     this.sceneManager.wallPreviewGroup.add(this.previewLine);
   }
 
-  private updateDimensionLabel(start: Point2D, end: Point2D, event: MouseEvent): void {
+  private updateDimensionLabel(start: Point2D, end: Point2D): void {
     const dx = end.x - start.x;
     const dz = end.z - start.z;
     const lengthM = Math.sqrt(dx * dx + dz * dz);
@@ -194,13 +187,7 @@ export class DrawingTool {
       return;
     }
 
-    // Project the midpoint of the line to screen coordinates
-    const midpoint = new THREE.Vector3(
-      (start.x + end.x) / 2,
-      0.1,
-      (start.z + end.z) / 2,
-    );
-
+    const midpoint = new THREE.Vector3((start.x + end.x) / 2, 0.1, (start.z + end.z) / 2);
     const screenPos = midpoint.clone().project(this.sceneManager.camera);
     const canvas = this.sceneManager.renderer.domElement;
     const rect = canvas.getBoundingClientRect();
@@ -208,19 +195,10 @@ export class DrawingTool {
     const screenX = ((screenPos.x + 1) / 2) * rect.width;
     const screenY = ((-screenPos.y + 1) / 2) * rect.height;
 
-    // Format: show mm
     const lengthMM = Math.round(lengthM * 1000);
     this.dimensionLabel.textContent = `${lengthMM} mm`;
     this.dimensionLabel.style.display = 'block';
     this.dimensionLabel.style.left = `${screenX}px`;
     this.dimensionLabel.style.top = `${screenY - 28}px`;
-  }
-
-  private updateStatus(): void {
-    if (this.firstPoint) {
-      this.onStatusChange?.('Click to place wall endpoint (Esc to cancel)');
-    } else {
-      this.onStatusChange?.('Click to start drawing a wall');
-    }
   }
 }

@@ -16,10 +16,11 @@ export interface Wall {
   id: string;
   start: Point2D;
   end: Point2D;
+  wallType: 'exterior' | 'interior';
 }
 
 /** Type of timber member in the frame */
-export type MemberType = 'stud' | 'bottom_plate' | 'top_plate' | 'nogging';
+export type MemberType = 'stud' | 'bottom_plate' | 'top_plate' | 'nogging' | 'rafter' | 'ridge_beam' | 'collar_tie';
 
 /** A single piece of timber positioned in 3D space */
 export interface TimberMember {
@@ -37,23 +38,29 @@ export interface TimberFrame {
   sourceWalls: Wall[];
 }
 
-/** User-adjustable frame generation parameters */
-export interface FrameParams {
-  /** Center-to-center stud spacing in meters (default: 0.6 for 600mm) */
-  studSpacing: number;
-  /** Wall height in meters (default: 2.4) */
-  wallHeight: number;
-  /** Stud width (narrow face) in meters (default: 0.045 for 45mm) */
-  studWidth: number;
-  /** Stud depth (wide face) in meters (default: 0.095 for 95mm) */
-  studDepth: number;
-  /** Grid snap increment in meters (default: 0.5) */
-  gridSnap: number;
-  /** Whether to generate mid-height noggings (default: true) */
-  noggings: boolean;
+/** Roof configuration */
+export interface RoofConfig {
+  type: 'gable';
+  pitchAngle: number;   // degrees
+  overhang: number;      // meters
+  ridgeAxis: 'x' | 'z'; // which axis the ridge runs along
 }
 
-/** Default frame parameters (metric, common Scandinavian/European dimensions) */
+/** User-adjustable frame generation parameters */
+export interface FrameParams {
+  studSpacing: number;
+  wallHeight: number;
+  studWidth: number;
+  studDepth: number;
+  gridSnap: number;
+  noggings: boolean;
+  roof: RoofConfig | null;
+}
+
+/** Design phases */
+export type Phase = 'exterior' | 'interior' | 'openings' | 'roof' | 'done';
+
+/** Default frame parameters */
 export const DEFAULT_PARAMS: FrameParams = {
   studSpacing: 0.6,
   wallHeight: 2.4,
@@ -61,4 +68,5 @@ export const DEFAULT_PARAMS: FrameParams = {
   studDepth: 0.095,
   gridSnap: 0.5,
   noggings: true,
+  roof: null,
 };

@@ -27,41 +27,317 @@ body {
   display: block;
 }
 
+/* ─── Side panel ─── */
+
 #controls {
   width: 300px;
   min-width: 300px;
-  padding: 20px;
+  padding: 16px;
   background: #1a1a2e;
   color: #e0e0e0;
   overflow-y: auto;
   border-left: 1px solid #2a2a4a;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .panel-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #ffffff;
   padding-bottom: 8px;
   border-bottom: 2px solid #e67e22;
-  margin-bottom: 4px;
 }
+
+.backend-indicator {
+  padding: 4px 10px;
+  background: #16213e;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+}
+
+/* ─── Phase stepper ─── */
+
+.phase-stepper {
+  display: flex;
+  gap: 2px;
+}
+
+.phase-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 2px 6px;
+  border-radius: 6px;
+  background: #16213e;
+  border: 2px solid transparent;
+  transition: all 0.25s ease;
+  cursor: default;
+  opacity: 0.4;
+}
+
+.phase-step.clickable {
+  cursor: pointer;
+}
+
+.phase-step.clickable:hover {
+  background: #1e2d4f;
+}
+
+.phase-step.active {
+  opacity: 1;
+  border-color: var(--step-color, #e67e22);
+  background: #16213e;
+}
+
+.phase-step.completed {
+  opacity: 0.8;
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: #2a2a4a;
+  color: #888;
+  transition: all 0.25s ease;
+}
+
+.phase-step.active .step-num {
+  background: var(--step-color, #e67e22);
+  color: #fff;
+}
+
+.phase-step.completed .step-num {
+  background: var(--step-color, #2ecc71);
+  color: #fff;
+}
+
+.step-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  line-height: 1.1;
+  transition: color 0.25s ease;
+}
+
+.phase-step.active .step-label {
+  color: #ddd;
+}
+
+.phase-step.completed .step-label {
+  color: #999;
+}
+
+/* ─── Phase info ─── */
+
+.phase-info {
+  padding: 10px 12px;
+  background: #16213e;
+  border-radius: 8px;
+  border-left: 3px solid #e67e22;
+}
+
+.phase-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e67e22;
+  margin-bottom: 3px;
+}
+
+.phase-desc {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ─── Drawing hints ─── */
+
+.drawing-hint,
+.openings-hint {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  border: 1px solid #2a2a4a;
+}
+
+.hint-item {
+  font-size: 12px;
+  color: #aaa;
+  padding: 3px 0;
+  padding-left: 14px;
+  position: relative;
+}
+
+.hint-item::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #e67e22;
+  font-weight: 700;
+}
+
+.hint-item.coming-soon {
+  color: #9b59b6;
+  padding-left: 0;
+  font-style: italic;
+}
+
+.hint-item.coming-soon::before {
+  display: none;
+}
+
+.hint-item kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: #2a2a4a;
+  border-radius: 3px;
+  color: #ddd;
+  border: 1px solid #3a3a5a;
+}
+
+/* ─── Sections ─── */
 
 .panel-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .panel-section h3 {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #aaa;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
+
+.roof-section {
+  padding: 10px 12px;
+  background: rgba(46, 204, 113, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+/* ─── Axis toggle ─── */
+
+.axis-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.axis-label {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.axis-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-axis {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #2a2a4a;
+  background: #16213e;
+  color: #888;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-axis.active {
+  background: #2ecc71;
+  color: #fff;
+  border-color: #2ecc71;
+}
+
+.btn-axis:hover:not(.active) {
+  background: #1e2d4f;
+}
+
+/* ─── Sliders ─── */
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.slider-row label {
+  font-size: 12px;
+  color: #bbb;
+  display: flex;
+  justify-content: space-between;
+}
+
+.slider-row label .slider-value {
+  color: #e67e22;
+  font-weight: 600;
+}
+
+.slider-row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: #16213e;
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid #2a2a4a;
+  cursor: pointer;
+}
+
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #e67e22;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+
+.slider-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #e67e22;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+
+.roof-section .slider-row label .slider-value {
+  color: #2ecc71;
+}
+
+.roof-section .slider-row input[type="range"]::-webkit-slider-thumb {
+  background: #2ecc71;
+}
+
+.roof-section .slider-row input[type="range"]::-moz-range-thumb {
+  background: #2ecc71;
+}
+
+/* ─── Param rows / Checkbox ─── */
 
 .param-row {
   display: flex;
@@ -69,36 +345,29 @@ body {
   gap: 4px;
 }
 
-.param-row label {
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
   font-size: 12px;
   color: #bbb;
 }
 
-.param-row input,
-.param-row select {
-  background: #16213e;
-  border: 1px solid #2a2a4a;
-  color: #e0e0e0;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
+.checkbox-label input[type="checkbox"] {
+  accent-color: #e67e22;
 }
 
-.param-row input:focus,
-.param-row select:focus {
-  border-color: #e67e22;
-}
+/* ─── Buttons ─── */
 
 .btn {
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, transform 0.1s, opacity 0.2s;
 }
 
 .btn:active {
@@ -133,15 +402,40 @@ body {
   background: #3a3a5a;
 }
 
-.button-group {
+.nav-group {
   display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
+.nav-group .btn {
+  flex: 1;
+}
+
+.btn-next {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-next::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.4s;
+}
+
+.btn-next:hover::after {
+  left: 100%;
+}
+
+/* ─── Stats ─── */
+
 .status-bar {
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid #2a2a4a;
   font-size: 12px;
   color: #888;
@@ -153,35 +447,24 @@ body {
   padding: 2px 0;
 }
 
-.backend-indicator {
-  padding: 5px 10px;
-  background: #16213e;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 11px;
+.status-bar .stat-total {
   font-weight: 600;
-  color: #e67e22;
-  border: 1px solid #e67e22;
+  color: #bbb;
+  border-top: 1px solid #2a2a4a;
+  margin-top: 2px;
+  padding-top: 4px;
 }
 
-.mode-indicator {
-  padding: 8px 12px;
-  background: #16213e;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #e67e22;
-  border: 1px solid #e67e22;
-}
+/* ─── Help text ─── */
 
 .help-text {
-  font-size: 11px;
-  color: #666;
-  line-height: 1.4;
+  font-size: 10px;
+  color: #555;
+  line-height: 1.5;
 }
 
-/* Dimension label on drawing preview */
+/* ─── Dimension label ─── */
+
 .dimension-label {
   position: absolute;
   pointer-events: none;
@@ -196,55 +479,4 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: 0.3px;
   z-index: 10;
-}
-
-/* Slider styles */
-.slider-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.slider-row label {
-  font-size: 12px;
-  color: #bbb;
-  display: flex;
-  justify-content: space-between;
-}
-
-.slider-row label .slider-value {
-  color: #e67e22;
-  font-weight: 600;
-}
-
-.slider-row input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  background: #16213e;
-  border-radius: 3px;
-  outline: none;
-  border: 1px solid #2a2a4a;
-  cursor: pointer;
-}
-
-.slider-row input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #e67e22;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid #fff;
-}
-
-.slider-row input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #e67e22;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid #fff;
 }
