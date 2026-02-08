@@ -602,29 +602,9 @@ body {
   transform: rotate(180deg);
 }
 
-/* ─── Mobile layout (narrow screens) ─── */
+/* ─── Mobile shared ─── */
 
 @media (max-width: 768px) {
-  #controls {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    min-width: unset;
-    max-height: 65vh;
-    z-index: 25;
-    transform: translateY(calc(100% - 56px));
-    transition: transform 0.25s ease;
-    border-left: none;
-    border-top: 1px solid #2a2a4a;
-    border-radius: 16px 16px 0 0;
-  }
-
-  #controls.panel-open {
-    transform: translateY(0);
-  }
-
   .pull-handle {
     display: flex;
   }
@@ -666,5 +646,74 @@ body {
   .slider-row input[type="range"]::-moz-range-thumb {
     width: 22px;
     height: 22px;
+  }
+}
+
+/* ─── Mobile portrait: bottom sheet ─── */
+
+@media (max-width: 768px) and (orientation: portrait) {
+  #controls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    min-width: unset;
+    max-height: 65vh;
+    z-index: 25;
+    transform: translateY(calc(100% - 56px));
+    transition: transform 0.25s ease;
+    border-left: none;
+    border-top: 1px solid #2a2a4a;
+    border-radius: 16px 16px 0 0;
+  }
+
+  #controls.panel-open {
+    transform: translateY(0);
+  }
+}
+
+/* ─── Mobile landscape: right side panel ─── */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  #controls {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 280px;
+    min-width: unset;
+    max-height: 100vh;
+    z-index: 25;
+    transform: translateX(calc(100% - 56px));
+    transition: transform 0.25s ease;
+    border-top: none;
+    border-left: 1px solid #2a2a4a;
+    border-radius: 16px 0 0 16px;
+  }
+
+  #controls.panel-open {
+    transform: translateX(0);
+  }
+
+  .pull-handle {
+    flex-direction: row;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .pull-handle-arrow {
+    transform: rotate(90deg);
+  }
+
+  .panel-open .pull-handle-arrow {
+    transform: rotate(-90deg);
+  }
+
+  .pull-handle-bar {
+    width: 4px;
+    height: 40px;
   }
 }
