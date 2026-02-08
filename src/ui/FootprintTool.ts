@@ -290,21 +290,36 @@ export class FootprintTool {
       this.resizing = null;
       return;
     }
+
+    const t = e.touches[0];
+    const synth = new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY, button: 0 });
+
+    // Always allow arrow resize, even when draw mode is off
+    if (this.state === 'placed') {
+      const hit = this.hitTestArrows(synth);
+      if (hit) {
+        e.preventDefault();
+        this.resizing = hit;
+        return;
+      }
+    }
+
     if (!this.touchActive) return; // Let OrbitControls handle orbit
     e.preventDefault();
-    const t = e.touches[0];
-    this.onMouseDown(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
+    this.onMouseDown(synth);
   }
 
   private onTouchMove(e: TouchEvent): void {
-    if (e.touches.length !== 1 || !this.touchActive) return;
+    if (e.touches.length !== 1) return;
+    // Allow move when resizing an arrow OR when draw mode is active
+    if (!this.resizing && !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
   }
 
   private onTouchEnd(e: TouchEvent): void {
-    if (!this.touchActive) return;
+    if (!this.resizing && !this.touchActive) return;
     e.preventDefault();
     const t = e.changedTouches[0];
     this.onMouseUp(new MouseEvent('mouseup', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
