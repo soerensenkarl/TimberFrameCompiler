@@ -172,17 +172,15 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
-// ─── Mobile menu toggle ───
+// ─── Mobile pull-up handle ───
 
-const menuToggle = document.createElement('button');
-menuToggle.className = 'menu-toggle';
-menuToggle.title = 'Toggle menu';
-menuToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
-viewport.appendChild(menuToggle);
+const pullHandle = document.createElement('div');
+pullHandle.className = 'pull-handle';
+pullHandle.innerHTML = `<div class="pull-handle-bar"></div><svg class="pull-handle-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`;
+controlsContainer.prepend(pullHandle);
 
-menuToggle.addEventListener('click', () => {
-  const open = controlsContainer.classList.toggle('panel-open');
-  menuToggle.classList.toggle('active', open);
+pullHandle.addEventListener('click', () => {
+  controlsContainer.classList.toggle('panel-open');
 });
 
 // Start in exterior phase with footprint tool
