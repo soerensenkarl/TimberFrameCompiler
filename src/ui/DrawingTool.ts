@@ -22,6 +22,7 @@ export class DrawingTool {
   private snapIndicator: THREE.Mesh;
   private dimensionLabel: HTMLDivElement;
   private enabled = false;
+  private touchActive = false;
   private touchStartPos: { x: number; y: number } | null = null;
 
   onStatusChange: ((status: string) => void) | null = null;
@@ -53,6 +54,10 @@ export class DrawingTool {
 
   setGridSnap(snap: number): void {
     this.gridSnap = snap;
+  }
+
+  setTouchActive(active: boolean): void {
+    this.touchActive = active;
   }
 
   setWallType(type: 'exterior' | 'interior'): void {
@@ -151,21 +156,21 @@ export class DrawingTool {
   // ─── Touch handlers ───
 
   private onTouchStart(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.touchStartPos = { x: t.clientX, y: t.clientY };
   }
 
   private onTouchMove(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
   }
 
   private onTouchEnd(e: TouchEvent): void {
-    if (!this.touchStartPos) return;
+    if (!this.touchStartPos || !this.touchActive) return;
     e.preventDefault();
     const t = e.changedTouches[0];
     const dx = t.clientX - this.touchStartPos.x;

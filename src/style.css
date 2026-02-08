@@ -50,17 +50,6 @@ body {
   border-bottom: 2px solid #e67e22;
 }
 
-.backend-indicator {
-  padding: 4px 10px;
-  background: #16213e;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #e67e22;
-  border: 1px solid #e67e22;
-}
-
 /* ─── Phase stepper ─── */
 
 .phase-stepper {
@@ -536,192 +525,39 @@ body {
   touch-action: none;
 }
 
-/* ─── Mobile toggle button ─── */
+/* ─── Draw-mode toggle ─── */
 
-.mobile-toggle {
+.draw-toggle {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 20;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   background: rgba(26, 26, 46, 0.85);
-  border: 1px solid #2a2a4a;
+  border: 2px solid #2a2a4a;
   color: #888;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   backdrop-filter: blur(8px);
 }
 
-.mobile-toggle:hover {
-  background: rgba(26, 26, 46, 0.95);
-  color: #e0e0e0;
-  border-color: #e67e22;
+.draw-toggle svg {
+  width: 24px;
+  height: 24px;
 }
 
-.mobile-toggle.active {
-  color: #e67e22;
-  border-color: #e67e22;
-}
-
-.mobile-toggle svg {
-  width: 22px;
-  height: 22px;
-}
-
-/* ─── Panel handle (mobile only) ─── */
-
-.panel-handle {
-  display: none;
-  width: 100%;
-  padding: 10px 0 6px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.panel-handle-bar {
-  width: 40px;
-  height: 4px;
-  background: #555;
-  border-radius: 2px;
-  margin: 0 auto;
-  transition: background 0.2s;
-}
-
-.panel-handle:active .panel-handle-bar {
-  background: #e67e22;
-}
-
-/* ─── Panel toggle button (mobile only) ─── */
-
-.panel-toggle {
-  display: none;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 20;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: rgba(26, 26, 46, 0.85);
-  border: 1px solid #2a2a4a;
-  color: #888;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  backdrop-filter: blur(8px);
-}
-
-.panel-toggle svg {
-  width: 20px;
-  height: 20px;
-}
-
-.panel-toggle.active {
-  color: #e67e22;
-  border-color: #e67e22;
-}
-
-/* ─── Example button ─── */
-
-.btn-example {
-  padding: 6px 12px;
-  font-size: 11px;
-  background: #16213e;
-  border: 1px dashed #e67e22;
-  color: #e67e22;
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.btn-example:hover {
-  background: #e67e22;
+.draw-toggle.active {
+  background: rgba(230, 126, 34, 0.9);
   color: #fff;
-  border-style: solid;
+  border-color: #e67e22;
 }
 
-/* ─── Mobile mode ─── */
-
-body.mobile-mode #app {
-  flex-direction: column;
-  position: relative;
-}
-
-body.mobile-mode #viewport {
-  flex: 1;
-  min-height: 0;
-}
-
-body.mobile-mode #controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  min-width: unset;
-  max-height: 60vh;
-  border-left: none;
-  border-top: 1px solid #2a2a4a;
-  overflow-y: auto;
-  z-index: 15;
-  display: none;
-}
-
-body.mobile-mode #controls.panel-open {
-  display: flex;
-}
-
-body.mobile-mode .panel-toggle {
-  display: flex;
-}
-
-body.mobile-mode .panel-handle {
-  display: block;
-}
-
-body.mobile-mode .panel-title {
-  display: none;
-}
-
-body.mobile-mode .help-text {
-  display: none;
-}
-
-/* Larger touch targets in mobile mode */
-
-body.mobile-mode .btn {
-  padding: 14px 18px;
-  font-size: 14px;
-  min-height: 44px;
-}
-
-body.mobile-mode .btn-opening,
-body.mobile-mode .btn-axis {
-  padding: 10px 14px;
-  min-height: 44px;
-}
-
-body.mobile-mode .phase-step {
-  padding: 10px 4px 8px;
-}
-
-body.mobile-mode .slider-row input[type="range"] {
-  height: 8px;
-}
-
-body.mobile-mode .slider-row input[type="range"]::-webkit-slider-thumb {
-  width: 22px;
-  height: 22px;
-}
-
-body.mobile-mode .slider-row input[type="range"]::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+.draw-toggle:active {
+  transform: translateX(-50%) scale(0.93);
 }

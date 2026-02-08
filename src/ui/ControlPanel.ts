@@ -53,12 +53,10 @@ export class ControlPanel {
   // Stats
   private statsContainer!: HTMLElement;
   private wallCountEl!: HTMLElement;
-  private backendIndicator!: HTMLElement;
 
   // Phase-specific sections
   private drawingHint!: HTMLElement;
   private paramSection!: HTMLElement;
-  private exampleBtn!: HTMLButtonElement;
 
   // Opening config state
   private openingConfig: OpeningConfig = { type: 'window', width: 0.9, height: 1.2, sillHeight: 0.9 };
@@ -69,7 +67,6 @@ export class ControlPanel {
   onClear: (() => void) | null = null;
   onParamsChange: ((params: FrameParams) => void) | null = null;
   onOpeningConfigChange: ((config: OpeningConfig) => void) | null = null;
-  onLoadExample: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -93,18 +90,6 @@ export class ControlPanel {
   setPhase(phase: Phase): void {
     this.currentPhase = phase;
     this.updatePhaseUI();
-  }
-
-  setBackendStatus(backend: 'python' | 'local'): void {
-    if (backend === 'python') {
-      this.backendIndicator.textContent = 'Python API';
-      this.backendIndicator.style.color = '#2ecc71';
-      this.backendIndicator.style.borderColor = '#2ecc71';
-    } else {
-      this.backendIndicator.textContent = 'Local Engine';
-      this.backendIndicator.style.color = '#e67e22';
-      this.backendIndicator.style.borderColor = '#e67e22';
-    }
   }
 
   updateOpeningCount(count: number): void {
@@ -136,19 +121,6 @@ export class ControlPanel {
     title.className = 'panel-title';
     title.textContent = 'Timber Frame Compiler';
     this.container.appendChild(title);
-
-    // Backend indicator
-    this.backendIndicator = document.createElement('div');
-    this.backendIndicator.className = 'backend-indicator';
-    this.backendIndicator.textContent = 'Local Engine';
-    this.container.appendChild(this.backendIndicator);
-
-    // Example house button
-    this.exampleBtn = document.createElement('button');
-    this.exampleBtn.className = 'btn-example';
-    this.exampleBtn.textContent = 'Load Example House';
-    this.exampleBtn.addEventListener('click', () => this.onLoadExample?.());
-    this.container.appendChild(this.exampleBtn);
 
     // Phase stepper
     const stepper = document.createElement('div');
@@ -303,7 +275,6 @@ export class ControlPanel {
       <strong>Controls:</strong><br/>
       Left click: Draw walls<br/>
       Right drag: Rotate &middot; Middle drag: Pan<br/>
-      Touch: drag pan, pinch zoom, twist rotate<br/>
       Scroll: Zoom &middot; Escape: Cancel
     `;
     this.container.appendChild(help);
@@ -437,9 +408,6 @@ export class ControlPanel {
     }
     this.openingsSection.style.display = this.currentPhase === 'openings' ? 'flex' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
-
-    // Show example button only in exterior phase
-    this.exampleBtn.style.display = this.currentPhase === 'exterior' ? 'block' : 'none';
 
     // Apply roof config when entering roof or done phase for live preview
     if (this.currentPhase === 'roof' || this.currentPhase === 'done') {

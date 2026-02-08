@@ -43,6 +43,7 @@ export class FootprintTool {
   private snapIndicator: THREE.Mesh;
 
   private enabled = false;
+  private touchActive = false;
 
   constructor(sceneManager: SceneManager, wallManager: WallManager, gridSnap: number) {
     this.sceneManager = sceneManager;
@@ -85,6 +86,10 @@ export class FootprintTool {
 
   setGridSnap(snap: number): void {
     this.gridSnap = snap;
+  }
+
+  setTouchActive(active: boolean): void {
+    this.touchActive = active;
   }
 
   enable(): void {
@@ -274,8 +279,7 @@ export class FootprintTool {
 
   private onTouchStart(e: TouchEvent): void {
     if (e.touches.length !== 1) {
-      // Second finger appeared — cancel any in-progress drag so it doesn't
-      // accidentally complete when the navigation gesture ends
+      // Second finger appeared — cancel any in-progress drag
       if (this.state === 'dragging') {
         this.state = 'idle';
         this.dragStart = null;
@@ -286,19 +290,21 @@ export class FootprintTool {
       this.resizing = null;
       return;
     }
+    if (!this.touchActive) return; // Let OrbitControls handle orbit
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseDown(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
   }
 
   private onTouchMove(e: TouchEvent): void {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !this.touchActive) return;
     e.preventDefault();
     const t = e.touches[0];
     this.onMouseMove(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
   }
 
   private onTouchEnd(e: TouchEvent): void {
+    if (!this.touchActive) return;
     e.preventDefault();
     const t = e.changedTouches[0];
     this.onMouseUp(new MouseEvent('mouseup', { clientX: t.clientX, clientY: t.clientY, button: 0 }));
