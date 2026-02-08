@@ -596,10 +596,62 @@ body {
   background: #e67e22;
 }
 
+/* ─── Panel toggle button (mobile only) ─── */
+
+.panel-toggle {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(26, 26, 46, 0.85);
+  border: 1px solid #2a2a4a;
+  color: #888;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.panel-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.panel-toggle.active {
+  color: #e67e22;
+  border-color: #e67e22;
+}
+
+/* ─── Example button ─── */
+
+.btn-example {
+  padding: 6px 12px;
+  font-size: 11px;
+  background: #16213e;
+  border: 1px dashed #e67e22;
+  color: #e67e22;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-example:hover {
+  background: #e67e22;
+  color: #fff;
+  border-style: solid;
+}
+
 /* ─── Mobile mode ─── */
 
 body.mobile-mode #app {
   flex-direction: column;
+  position: relative;
 }
 
 body.mobile-mode #viewport {
@@ -608,18 +660,26 @@ body.mobile-mode #viewport {
 }
 
 body.mobile-mode #controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   min-width: unset;
-  max-height: 50vh;
+  max-height: 60vh;
   border-left: none;
   border-top: 1px solid #2a2a4a;
-  transition: max-height 0.3s ease;
   overflow-y: auto;
+  z-index: 15;
+  display: none;
 }
 
-body.mobile-mode #controls.collapsed {
-  max-height: 52px;
-  overflow: hidden;
+body.mobile-mode #controls.panel-open {
+  display: flex;
+}
+
+body.mobile-mode .panel-toggle {
+  display: flex;
 }
 
 body.mobile-mode .panel-handle {

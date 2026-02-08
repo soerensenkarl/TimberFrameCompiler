@@ -179,6 +179,14 @@ mobileToggle.title = 'Toggle mobile layout';
 mobileToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="1" width="14" height="22" rx="2"/><line x1="9" y1="19" x2="15" y2="19"/></svg>`;
 viewport.appendChild(mobileToggle);
 
+// Panel toggle button (hamburger, visible in mobile mode)
+const panelToggle = document.createElement('button');
+panelToggle.className = 'panel-toggle';
+panelToggle.title = 'Toggle controls panel';
+panelToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
+viewport.appendChild(panelToggle);
+
+// Panel drag handle (inside panel, tapping it closes the panel)
 const panelHandle = document.createElement('div');
 panelHandle.className = 'panel-handle';
 panelHandle.innerHTML = '<div class="panel-handle-bar"></div>';
@@ -188,18 +196,96 @@ mobileToggle.addEventListener('click', () => {
   const entering = !document.body.classList.contains('mobile-mode');
   document.body.classList.toggle('mobile-mode', entering);
   mobileToggle.classList.toggle('active', entering);
-  if (entering) {
-    controlsContainer.classList.add('collapsed');
-  } else {
-    controlsContainer.classList.remove('collapsed');
+  if (!entering) {
+    controlsContainer.classList.remove('panel-open');
+    panelToggle.classList.remove('active');
   }
   setTimeout(() => sceneManager.resize(), 350);
 });
 
-panelHandle.addEventListener('click', () => {
-  controlsContainer.classList.toggle('collapsed');
-  setTimeout(() => sceneManager.resize(), 350);
+panelToggle.addEventListener('click', () => {
+  const opening = !controlsContainer.classList.contains('panel-open');
+  controlsContainer.classList.toggle('panel-open', opening);
+  panelToggle.classList.toggle('active', opening);
 });
+
+panelHandle.addEventListener('click', () => {
+  controlsContainer.classList.remove('panel-open');
+  panelToggle.classList.remove('active');
+});
+
+// ─── Example house ───
+
+function loadExampleHouse(): void {
+  // Suppress onChange to avoid intermediate renders
+  const savedOnChange = wallManager.onChange;
+  wallManager.onChange = null;
+
+  // Clear everything
+  wallManager.clear();
+  clearFrame();
+  clearPreviews();
+  footprintTool.reset();
+  drawingTool.cancelDrawing();
+  openingTool.reset();
+  controlPanel.updateOpeningCount(0);
+
+  // Footprint: 10m x 8m
+  wallManager.setFootprint(0, 0, 10, 8);
+
+  // Interior walls: central + two cross walls -> 4 rooms
+  wallManager.addWall({ x: 5, z: 0 }, { x: 5, z: 8 }, 'interior');
+  wallManager.addWall({ x: 0, z: 4 }, { x: 5, z: 4 }, 'interior');
+  wallManager.addWall({ x: 5, z: 4 }, { x: 10, z: 4 }, 'interior');
+
+  // Find walls by geometry for opening placement
+  const walls = wallManager.getWalls();
+  const find = (sx: number, sz: number, ex: number, ez: number) =>
+    walls.find(w =>
+      Math.abs(w.start.x - sx) < 0.1 && Math.abs(w.start.z - sz) < 0.1 &&
+      Math.abs(w.end.x - ex) < 0.1 && Math.abs(w.end.z - ez) < 0.1
+    );
+
+  const bottom = find(0, 0, 10, 0);    // front wall, 10m
+  const right = find(10, 0, 10, 8);     // right wall, 8m
+  const top = find(10, 8, 0, 8);        // back wall, 10m
+  const left = find(0, 8, 0, 0);        // left wall, 8m
+  const central = find(5, 0, 5, 8);     // central vertical, 8m
+  const leftCross = find(0, 4, 5, 4);   // left horizontal, 5m
+  const rightCross = find(5, 4, 10, 4); // right horizontal, 5m
+
+  // Front wall: door + window
+  if (bottom) {
+    wallManager.addOpening(bottom.id, 'door', 2.5, 0.9, 2.1, 0);
+    wallManager.addOpening(bottom.id, 'window', 7.5, 1.2, 1.2, 0.9);
+  }
+  // Right wall: 2 windows
+  if (right) {
+    wallManager.addOpening(right.id, 'window', 2, 1.2, 1.2, 0.9);
+    wallManager.addOpening(right.id, 'window', 6, 1.0, 1.2, 0.9);
+  }
+  // Back wall: 2 windows
+  if (top) {
+    wallManager.addOpening(top.id, 'window', 2.5, 1.0, 1.2, 0.9);
+    wallManager.addOpening(top.id, 'window', 7.5, 1.2, 1.2, 0.9);
+  }
+  // Left wall: 2 windows
+  if (left) {
+    wallManager.addOpening(left.id, 'window', 2, 1.2, 1.2, 0.9);
+    wallManager.addOpening(left.id, 'window', 6, 1.5, 1.2, 0.9);
+  }
+  // Interior doors
+  if (central) wallManager.addOpening(central.id, 'door', 2, 0.8, 2.1, 0);
+  if (leftCross) wallManager.addOpening(leftCross.id, 'door', 2.5, 0.8, 2.1, 0);
+  if (rightCross) wallManager.addOpening(rightCross.id, 'door', 2.5, 0.8, 2.1, 0);
+
+  // Restore onChange and finalize
+  wallManager.onChange = savedOnChange;
+  controlPanel.setPhase('done');
+  onPhaseChange('done');
+}
+
+controlPanel.onLoadExample = () => loadExampleHouse();
 
 // Start in exterior phase with footprint tool
 footprintTool.enable();
