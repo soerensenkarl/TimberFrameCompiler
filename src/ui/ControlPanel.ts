@@ -325,6 +325,11 @@ export class ControlPanel {
     this.openingsHint.style.display = this.currentPhase === 'openings' ? 'block' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
 
+    // Immediately apply roof config when entering roof phase for live preview
+    if (this.currentPhase === 'roof') {
+      this.params.roof = this.buildRoofConfig();
+    }
+
     // Navigation buttons
     this.backBtn.style.display = curIdx > 0 && this.currentPhase !== 'done' ? 'block' : 'none';
 
@@ -332,7 +337,7 @@ export class ControlPanel {
       this.nextBtn.textContent = 'Start Over';
       this.nextBtn.className = 'btn btn-danger btn-next';
     } else if (this.currentPhase === 'roof') {
-      this.nextBtn.textContent = 'Generate Frame';
+      this.nextBtn.textContent = 'Finish';
       this.nextBtn.className = 'btn btn-primary btn-next';
       this.nextBtn.style.background = '#2ecc71';
     } else {
@@ -354,10 +359,7 @@ export class ControlPanel {
     }
 
     if (this.currentPhase === 'roof') {
-      // Build roof config from UI
-      this.params.roof = this.buildRoofConfig();
-      this.readParams();
-      this.onGenerate?.();
+      // Roof is already live-previewed — just transition to done
       this.currentPhase = 'done';
       this.updatePhaseUI();
       this.onPhaseChange?.(this.currentPhase);
@@ -384,6 +386,10 @@ export class ControlPanel {
   private setRidgeAxis(axis: 'x' | 'z'): void {
     this.ridgeXBtn.classList.toggle('active', axis === 'x');
     this.ridgeZBtn.classList.toggle('active', axis === 'z');
+    // Trigger live update when toggling during roof phase
+    if (this.currentPhase === 'roof') {
+      this.readParams();
+    }
   }
 
   private buildRoofConfig(): RoofConfig {
@@ -444,7 +450,10 @@ export class ControlPanel {
       studDepth: parseFloat(this.studDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
-      roof: this.params.roof,
+      // Live-build roof config when in roof or done phase
+      roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')
+        ? this.buildRoofConfig()
+        : this.params.roof,
     };
     this.onParamsChange?.(this.params);
   }
