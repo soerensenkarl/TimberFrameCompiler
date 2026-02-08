@@ -294,8 +294,8 @@ export class ControlPanel {
       <strong>Controls:</strong><br/>
       Left click: Draw walls<br/>
       Right drag: Rotate view<br/>
-      Middle drag: Pan view<br/>
-      Scroll: Zoom &middot; Escape: Cancel
+      Middle drag / Two-finger drag: Pan<br/>
+      Scroll / Pinch: Zoom &middot; Escape: Cancel
     `;
     this.container.appendChild(help);
   }
