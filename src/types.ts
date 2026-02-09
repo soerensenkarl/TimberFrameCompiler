@@ -59,6 +59,8 @@ export interface RoofConfig {
   pitchAngle: number;   // degrees
   overhang: number;      // meters
   ridgeAxis: 'x' | 'z'; // which axis the ridge runs along
+  rafterWidth: number;   // meters — cross-section width (narrow face)
+  rafterDepth: number;   // meters — cross-section depth (tall face)
 }
 
 /** User-adjustable frame generation parameters */

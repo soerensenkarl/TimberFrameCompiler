@@ -538,11 +538,11 @@ export class TimberEngine {
 
     const pitchRad = (roof.pitchAngle * Math.PI) / 180;
     const overhang = roof.overhang;
-    const rafterWidth = studWidth;
-    const rafterDepth = studDepth * 1.25; // rafters are typically deeper than wall studs
+    const rafterWidth = roof.rafterWidth;
+    const rafterDepth = roof.rafterDepth;
 
-    const ridgeWidth = studWidth * 1.5;
-    const ridgeDepth = studDepth * 1.5;
+    const ridgeWidth = rafterWidth * 1.5;
+    const ridgeDepth = rafterDepth * 1.2;
 
     if (roof.ridgeAxis === 'x') {
       const halfSpan = (maxZ - minZ) / 2;
