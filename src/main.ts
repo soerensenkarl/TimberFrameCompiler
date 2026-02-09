@@ -188,7 +188,7 @@ controlPanel.onLoadExample = () => {
   wallManager.loadExampleHouse();
   controlPanel.setPhase('done');
   const params = controlPanel.getParams();
-  params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x' };
+  params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x', rafterWidth: 0.045, rafterDepth: 0.14 };
   onPhaseChange('done');
 };
 

@@ -34,6 +34,8 @@ export class ControlPanel {
   private roofSection!: HTMLElement;
   private pitchInput!: HTMLInputElement;
   private overhangInput!: HTMLInputElement;
+  private rafterWidthInput!: HTMLInputElement;
+  private rafterDepthInput!: HTMLInputElement;
   private ridgeXBtn!: HTMLButtonElement;
   private ridgeZBtn!: HTMLButtonElement;
 
@@ -186,6 +188,12 @@ export class ControlPanel {
 
     const overhangResult = this.addSlider(this.roofSection, 'Overhang', 300, 0, 1000, 50, 'mm');
     this.overhangInput = overhangResult.input;
+
+    const rafterWidthResult = this.addSlider(this.roofSection, 'Rafter Width', 45, 30, 100, 5, 'mm');
+    this.rafterWidthInput = rafterWidthResult.input;
+
+    const rafterDepthResult = this.addSlider(this.roofSection, 'Rafter Depth', 140, 90, 300, 5, 'mm');
+    this.rafterDepthInput = rafterDepthResult.input;
 
     const axisRow = document.createElement('div');
     axisRow.className = 'axis-toggle';
@@ -513,6 +521,8 @@ export class ControlPanel {
       pitchAngle: parseFloat(this.pitchInput.value),
       overhang: parseFloat(this.overhangInput.value) / 1000,
       ridgeAxis: this.ridgeXBtn.classList.contains('active') ? 'x' : 'z',
+      rafterWidth: parseFloat(this.rafterWidthInput.value) / 1000,
+      rafterDepth: parseFloat(this.rafterDepthInput.value) / 1000,
     };
   }
 
