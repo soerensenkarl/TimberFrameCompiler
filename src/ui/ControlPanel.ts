@@ -124,14 +124,7 @@ export class ControlPanel {
     title.textContent = 'Timber Frame Compiler';
     this.container.appendChild(title);
 
-    // Load example button
-    const exampleBtn = document.createElement('button');
-    exampleBtn.className = 'btn btn-example';
-    exampleBtn.textContent = 'Load Example House';
-    exampleBtn.addEventListener('click', () => this.onLoadExample?.());
-    this.container.appendChild(exampleBtn);
-
-    // Phase stepper
+    // Phase stepper (positioned at top of menu)
     const stepper = document.createElement('div');
     stepper.className = 'phase-stepper';
     for (const phase of PHASE_ORDER) {
@@ -293,6 +286,13 @@ export class ControlPanel {
       Scroll: Zoom &middot; Escape: Cancel
     `;
     body.appendChild(help);
+
+    // Load example button (at bottom of menu)
+    const exampleBtn = document.createElement('button');
+    exampleBtn.className = 'btn btn-example';
+    exampleBtn.textContent = 'Load Example House';
+    exampleBtn.addEventListener('click', () => this.onLoadExample?.());
+    body.appendChild(exampleBtn);
 
     this.container.appendChild(body);
   }
