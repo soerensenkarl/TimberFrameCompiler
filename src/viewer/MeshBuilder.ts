@@ -55,9 +55,12 @@ export class MeshBuilder {
     const material = this.getMaterial(member.type);
     const mesh = new THREE.Mesh(geometry, material);
 
+    // Horizontal members use Y as their bottom surface, so offset by width/2
+    // to center the box. Vertical members already encode exact start/end Y.
+    const isHorizontal = Math.abs(dy) < 0.01 * length;
     mesh.position.set(
       (member.start.x + member.end.x) / 2,
-      (member.start.y + member.end.y) / 2 + member.width / 2,
+      (member.start.y + member.end.y) / 2 + (isHorizontal ? member.width / 2 : 0),
       (member.start.z + member.end.z) / 2,
     );
 
