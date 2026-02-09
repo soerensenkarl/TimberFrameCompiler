@@ -241,7 +241,7 @@ export class TimberEngine {
 
       if (zone) {
         // Cripple stud above header — maintains OC layout
-        const crippleTop = wallHeight - plateThick * 2; // bottom of double top plate
+        const crippleTop = wallHeight - plateThick; // top of top plate
         if (zone.headerY + EPS < crippleTop) {
           members.push({
             start: { x: baseX, y: zone.headerY, z: baseZ },
@@ -263,9 +263,9 @@ export class TimberEngine {
         // Skip if this is a junction position (corner/partition studs handle it)
         if (junctionPositions.has(t) && t > EPS && t < dir.length - EPS) continue;
 
-        // Full-height stud: bottom plate top to underside of top plate
+        // Full-height stud: top of bottom plate to top of top plate
         const studBottom = plateThick;
-        const studTop = wallHeight - plateThick * 2; // below double top plate
+        const studTop = wallHeight - plateThick; // top of top plate
         if (studTop - studBottom > EPS) {
           members.push({
             start: { x: baseX, y: studBottom, z: baseZ },
@@ -314,7 +314,7 @@ export class TimberEngine {
     const krz = wall.start.z + dir.dirZ * kingRightT;
 
     const studBottom = plateThick;
-    const studTop = wallHeight - plateThick * 2;
+    const studTop = wallHeight - plateThick; // top of top plate
 
     // King studs — full height, frame the rough opening
     members.push({
@@ -387,7 +387,7 @@ export class TimberEngine {
     const { studWidth, studDepth, wallHeight } = params;
     const plateThick = studWidth;
     const studBottom = plateThick;
-    const studTop = wallHeight - plateThick * 2;
+    const studTop = wallHeight - plateThick; // top of top plate
 
     for (const junc of junctions) {
       if (junc.type === 'corner') {
@@ -466,7 +466,7 @@ export class TimberEngine {
   ): void {
     const { studWidth, studDepth, wallHeight } = params;
     const plateThick = studWidth;
-    const noggingY = (plateThick + wallHeight - plateThick * 2) / 2; // mid-height of stud cavity
+    const noggingY = (plateThick + wallHeight - plateThick) / 2; // mid-height of stud cavity
 
     // Collect all stud-like positions (regular studs + opening edges)
     const allPositions: number[] = [...studPositions];
