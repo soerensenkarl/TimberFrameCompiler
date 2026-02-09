@@ -32,9 +32,10 @@ export interface Opening {
 
 /** Type of timber member in the frame */
 export type MemberType =
-  | 'stud' | 'bottom_plate' | 'top_plate' | 'nogging'
-  | 'rafter' | 'ridge_beam' | 'collar_tie'
-  | 'header' | 'trimmer' | 'sill_plate' | 'cripple_stud';
+  | 'stud' | 'king_stud' | 'bottom_plate' | 'top_plate' | 'double_top_plate' | 'nogging'
+  | 'rafter' | 'ridge_beam' | 'collar_tie' | 'ceiling_joist' | 'fascia'
+  | 'header' | 'trimmer' | 'sill_plate' | 'cripple_stud'
+  | 'corner_stud' | 'partition_backer';
 
 /** A single piece of timber positioned in 3D space */
 export interface TimberMember {
