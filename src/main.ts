@@ -172,6 +172,26 @@ controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
 };
 
+// Wire: load example house
+controlPanel.onLoadExample = () => {
+  // Reset tools
+  footprintTool.disable();
+  drawingTool.cancelDrawing();
+  drawingTool.disable();
+  openingTool.disable();
+  openingTool.reset();
+  clearFrame();
+  clearPreviews();
+  footprintTool.reset();
+
+  // Load the example and enable roof
+  wallManager.loadExampleHouse();
+  controlPanel.setPhase('done');
+  const params = controlPanel.getParams();
+  params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x' };
+  onPhaseChange('done');
+};
+
 // ─── Mobile pull-up handle ───
 
 const pullHandle = document.createElement('div');

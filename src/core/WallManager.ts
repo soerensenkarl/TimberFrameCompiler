@@ -126,6 +126,73 @@ export class WallManager {
     this.notify();
   }
 
+  /**
+   * Load a pre-built example house:
+   * ~8m x 6m exterior with interior partition walls, windows, and a front door.
+   */
+  loadExampleHouse(): void {
+    this.clear();
+
+    // Exterior walls (clockwise rectangle)
+    const corners = [
+      { x: -4, z: -3 },
+      { x: 4, z: -3 },
+      { x: 4, z: 3 },
+      { x: -4, z: 3 },
+    ];
+    const extIds: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      const w = this.addWallSilent(corners[i], corners[(i + 1) % 4], 'exterior');
+      extIds.push(w.id);
+    }
+
+    // Interior walls
+    // Horizontal partition splitting the house roughly in half (living area / bedrooms)
+    this.addWallSilent({ x: -4, z: 0 }, { x: 1, z: 0 }, 'interior');
+    // Vertical partition creating two bedrooms on the back half
+    this.addWallSilent({ x: 0, z: 0 }, { x: 0, z: 3 }, 'interior');
+
+    // Openings
+    // Front wall (south, wall index 0: -4,-3 → 4,-3)
+    // Front door (centered)
+    this.addOpeningSilent(extIds[0], 'door', 4, 0.9, 2.1, 0);
+    // Window left of door
+    this.addOpeningSilent(extIds[0], 'window', 1.5, 1.0, 1.2, 0.9);
+    // Window right of door
+    this.addOpeningSilent(extIds[0], 'window', 6.5, 1.0, 1.2, 0.9);
+
+    // Right wall (east, wall index 1: 4,-3 → 4,3)
+    this.addOpeningSilent(extIds[1], 'window', 3, 1.0, 1.2, 0.9);
+
+    // Back wall (north, wall index 2: 4,3 → -4,3)
+    this.addOpeningSilent(extIds[2], 'window', 2, 1.0, 1.2, 0.9);
+    this.addOpeningSilent(extIds[2], 'window', 6, 1.0, 1.2, 0.9);
+
+    // Left wall (west, wall index 3: -4,3 → -4,-3)
+    this.addOpeningSilent(extIds[3], 'window', 3, 1.0, 1.2, 0.9);
+
+    this.notify();
+  }
+
+  /** Add wall without triggering onChange (for batch loading) */
+  private addWallSilent(start: Point2D, end: Point2D, wallType: 'exterior' | 'interior'): Wall {
+    const id = `wall-${nextId++}`;
+    const wall: Wall = { id, start, end, wallType };
+    this.walls.set(id, wall);
+    return wall;
+  }
+
+  /** Add opening without triggering onChange (for batch loading) */
+  private addOpeningSilent(
+    wallId: string, type: 'window' | 'door',
+    position: number, width: number, height: number, sillHeight: number,
+  ): Opening {
+    const id = `opening-${nextOpeningId++}`;
+    const opening: Opening = { id, wallId, type, position, width, height, sillHeight };
+    this.openings.set(id, opening);
+    return opening;
+  }
+
   private notify(): void {
     this.onChange?.(this.getWalls());
   }
