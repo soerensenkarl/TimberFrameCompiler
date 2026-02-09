@@ -4,7 +4,7 @@ import { WallManager } from '../core/WallManager';
 import { Point2D } from '../types';
 
 const COLOR = 0xe67e22;
-const ARROW_COLOR = 0xe67e22;
+const ARROW_COLOR = 0x2196f3;
 const MIN_SIZE = 0.5; // minimum footprint dimension in meters
 
 export interface Footprint {
