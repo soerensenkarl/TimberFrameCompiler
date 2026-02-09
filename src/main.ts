@@ -95,6 +95,18 @@ drawToggle.addEventListener('click', () => {
   setTouchDrawMode(!touchDrawActive);
 });
 
+// ─── Cancel wall button (viewport overlay, top-left) ───
+
+const cancelBtn = document.createElement('button');
+cancelBtn.className = 'btn-cancel-draw';
+cancelBtn.textContent = 'Cancel Wall';
+cancelBtn.style.display = 'none';
+viewport.appendChild(cancelBtn);
+
+cancelBtn.addEventListener('click', () => {
+  drawingTool.cancelDrawing();
+});
+
 // Phase transition handler
 function onPhaseChange(phase: Phase): void {
   // Disable all tools first
@@ -130,6 +142,9 @@ function onPhaseChange(phase: Phase): void {
 
   // Show draw toggle on touch devices when a tool is active
   drawToggle.style.display = (activeToolRef && isTouchDevice) ? 'flex' : 'none';
+
+  // Show cancel button during interior phase
+  cancelBtn.style.display = phase === 'interior' ? 'block' : 'none';
 
   // Re-render frame preview whenever phase changes
   regenerate();
@@ -170,6 +185,42 @@ controlPanel.onParamsChange = (params) => {
 // Wire: opening config changes from control panel
 controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
+};
+
+// Wire: load example house
+controlPanel.onLoadExample = () => {
+  // Reset tools
+  footprintTool.disable();
+  drawingTool.cancelDrawing();
+  drawingTool.disable();
+  openingTool.disable();
+  openingTool.reset();
+  clearFrame();
+  clearPreviews();
+  footprintTool.reset();
+
+  // Load the example and enable roof
+  wallManager.loadExampleHouse();
+  controlPanel.setPhase('done');
+  const params = controlPanel.getParams();
+  params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x' };
+  onPhaseChange('done');
+};
+
+// ─── Mobile pull-up handle ───
+
+const pullHandle = document.createElement('div');
+pullHandle.className = 'pull-handle';
+pullHandle.innerHTML = `<svg class="pull-handle-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg><div class="pull-handle-bar"></div>`;
+controlsContainer.prepend(pullHandle);
+
+pullHandle.addEventListener('click', () => {
+  controlsContainer.classList.toggle('panel-open');
+});
+
+// Update dimension labels every frame so they track the camera
+sceneManager.onUpdate = () => {
+  footprintTool.updateDimensionLabels();
 };
 
 // Start in exterior phase with footprint tool

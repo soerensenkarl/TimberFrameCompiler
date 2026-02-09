@@ -42,6 +42,14 @@ body {
   gap: 12px;
 }
 
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .panel-title {
   font-size: 17px;
   font-weight: 700;
@@ -186,6 +194,34 @@ body {
 
 .hint-item.coming-soon::before {
   display: none;
+}
+
+.btn-cancel-draw {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(42, 42, 74, 0.9);
+  color: #ccc;
+  border: 1px solid #3a3a5a;
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-cancel-draw:hover {
+  background: rgba(192, 57, 43, 0.9);
+  color: #fff;
+  border-color: #c0392b;
+}
+
+.btn-cancel-draw:active {
+  transform: scale(0.95);
 }
 
 .hint-item kbd {
@@ -421,6 +457,22 @@ body {
   background: #d35400;
 }
 
+.btn-example {
+  background: transparent;
+  border: 1px dashed #e67e22;
+  color: #e67e22;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  width: 100%;
+}
+.btn-example:hover {
+  background: #e67e22;
+  color: #fff;
+}
+
 .btn-danger {
   background: #444;
   color: #ccc;
@@ -560,4 +612,172 @@ body {
 
 .draw-toggle:active {
   transform: translateX(-50%) scale(0.93);
+}
+
+/* ─── Pull-up handle ─── */
+
+.pull-handle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pull-handle-bar {
+  width: 40px;
+  height: 4px;
+  background: #555;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.pull-handle:active .pull-handle-bar {
+  background: #e67e22;
+}
+
+.pull-handle-arrow {
+  width: 32px;
+  height: 32px;
+  color: #888;
+  transition: transform 0.25s ease, color 0.2s;
+}
+
+.pull-handle:active .pull-handle-arrow {
+  color: #e67e22;
+}
+
+.panel-open .pull-handle-arrow {
+  transform: rotate(180deg);
+}
+
+/* ─── Mobile shared ─── */
+
+@media (max-width: 768px) {
+  .pull-handle {
+    display: flex;
+  }
+
+  #controls {
+    overflow-y: hidden;
+  }
+
+  .panel-body {
+    overflow-y: auto;
+  }
+
+  .panel-title {
+    display: none;
+  }
+
+  .help-text {
+    display: none;
+  }
+
+  .phase-stepper {
+    flex-shrink: 0;
+  }
+
+  /* Larger touch targets */
+  .btn {
+    padding: 14px 18px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .btn-opening,
+  .btn-axis {
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+
+  .phase-step {
+    padding: 10px 4px 8px;
+  }
+
+  .slider-row input[type="range"] {
+    height: 8px;
+  }
+
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .slider-row input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* ─── Mobile portrait: bottom sheet ─── */
+
+@media (max-width: 768px) and (orientation: portrait) {
+  #controls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    min-width: unset;
+    max-height: 55vh;
+    z-index: 25;
+    transform: translateY(calc(100% - 110px));
+    transition: transform 0.25s ease;
+    border-left: none;
+    border-top: 1px solid #2a2a4a;
+    border-radius: 16px 16px 0 0;
+  }
+
+  #controls.panel-open {
+    transform: translateY(0);
+  }
+}
+
+/* ─── Mobile landscape: right side panel ─── */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  #controls {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 280px;
+    min-width: unset;
+    max-height: 100vh;
+    z-index: 25;
+    transform: translateX(calc(100% - 56px));
+    transition: transform 0.25s ease;
+    border-top: none;
+    border-left: 1px solid #2a2a4a;
+    border-radius: 16px 0 0 16px;
+  }
+
+  #controls.panel-open {
+    transform: translateX(0);
+  }
+
+  .pull-handle {
+    flex-direction: row;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .pull-handle-arrow {
+    transform: rotate(90deg);
+  }
+
+  .panel-open .pull-handle-arrow {
+    transform: rotate(-90deg);
+  }
+
+  .pull-handle-bar {
+    width: 4px;
+    height: 40px;
+  }
 }
