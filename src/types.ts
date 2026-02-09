@@ -67,6 +67,7 @@ export interface FrameParams {
   wallHeight: number;
   studWidth: number;
   studDepth: number;
+  exteriorStudDepth: number;
   gridSnap: number;
   noggings: boolean;
   roof: RoofConfig | null;
@@ -81,6 +82,7 @@ export const DEFAULT_PARAMS: FrameParams = {
   wallHeight: 2.4,
   studWidth: 0.045,
   studDepth: 0.095,
+  exteriorStudDepth: 0.145,
   gridSnap: 0.5,
   noggings: true,
   roof: null,

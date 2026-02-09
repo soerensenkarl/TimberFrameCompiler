@@ -26,6 +26,7 @@ export class ControlPanel {
   private wallHeightInput!: HTMLInputElement;
   private studWidthInput!: HTMLInputElement;
   private studDepthInput!: HTMLInputElement;
+  private exteriorStudDepthInput!: HTMLInputElement;
   private gridSnapInput!: HTMLInputElement;
   private noggingsInput!: HTMLInputElement;
 
@@ -231,7 +232,10 @@ export class ControlPanel {
     const widthResult = this.addSlider(this.paramSection, 'Timber Width', this.params.studWidth * 1000, 30, 100, 5, 'mm');
     this.studWidthInput = widthResult.input;
 
-    const depthResult = this.addSlider(this.paramSection, 'Timber Depth', this.params.studDepth * 1000, 45, 250, 5, 'mm');
+    const extDepthResult = this.addSlider(this.paramSection, 'Exterior Timber Depth', this.params.exteriorStudDepth * 1000, 45, 250, 5, 'mm');
+    this.exteriorStudDepthInput = extDepthResult.input;
+
+    const depthResult = this.addSlider(this.paramSection, 'Interior Timber Depth', this.params.studDepth * 1000, 45, 250, 5, 'mm');
     this.studDepthInput = depthResult.input;
 
     const snapResult = this.addSlider(this.paramSection, 'Grid Snap', this.params.gridSnap * 1000, 50, 1000, 50, 'mm');
@@ -543,6 +547,7 @@ export class ControlPanel {
       wallHeight: parseFloat(this.wallHeightInput.value) / 1000,
       studWidth: parseFloat(this.studWidthInput.value) / 1000,
       studDepth: parseFloat(this.studDepthInput.value) / 1000,
+      exteriorStudDepth: parseFloat(this.exteriorStudDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
       roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')
