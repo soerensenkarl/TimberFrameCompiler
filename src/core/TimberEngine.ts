@@ -63,7 +63,11 @@ export class TimberEngine {
         .filter(o => o.wallId === wall.id)
         .sort((a, b) => a.position - b.position);
       const dir = wallDirs.get(wall.id)!;
-      members.push(...this.generateWallFrame(wall, dir, params, wallOpenings, junctions, walls, wallDirs));
+      // Use exterior depth for exterior walls, standard depth for interior
+      const wallParams = wall.wallType === 'exterior'
+        ? { ...params, studDepth: params.exteriorStudDepth }
+        : params;
+      members.push(...this.generateWallFrame(wall, dir, wallParams, wallOpenings, junctions, walls, wallDirs));
     }
 
     // Corner assemblies and partition backers
@@ -384,7 +388,7 @@ export class TimberEngine {
     params: FrameParams,
   ): TimberMember[] {
     const members: TimberMember[] = [];
-    const { studWidth, studDepth, wallHeight } = params;
+    const { studWidth, wallHeight } = params;
     const plateThick = studWidth;
     const studBottom = plateThick;
     const studTop = wallHeight - plateThick * 2;
@@ -398,15 +402,16 @@ export class TimberEngine {
 
         for (const w of jWalls) {
           const d = wallDirs.get(w.id)!;
+          const depth = w.wallType === 'exterior' ? params.exteriorStudDepth : params.studDepth;
           // Offset a backer stud along the wall normal (creates nailing surface)
-          const bx = junc.point.x + d.normX * studDepth;
-          const bz = junc.point.z + d.normZ * studDepth;
+          const bx = junc.point.x + d.normX * depth;
+          const bz = junc.point.z + d.normZ * depth;
 
           if (studTop > studBottom + EPS) {
             members.push({
               start: { x: bx, y: studBottom, z: bz },
               end: { x: bx, y: studTop, z: bz },
-              width: studWidth, depth: studDepth,
+              width: studWidth, depth,
               type: 'corner_stud', wallId: w.id,
             });
           }
@@ -423,6 +428,7 @@ export class TimberEngine {
         for (const twId of throughWalls) {
           const tw = walls.find(w => w.id === twId)!;
           const td = wallDirs.get(twId)!;
+          const depth = tw.wallType === 'exterior' ? params.exteriorStudDepth : params.studDepth;
 
           // Place a backer stud on each side of the butting wall, offset by studDepth along the through wall
           for (const _bwId of buttingWalls) {
@@ -430,7 +436,7 @@ export class TimberEngine {
             const t = this.projectPointOntoWallT(junc.point, tw, td);
             if (t === null) continue;
 
-            const offset = studDepth * 0.75;
+            const offset = depth * 0.75;
             for (const side of [-1, 1]) {
               const bt = t + side * offset;
               if (bt < EPS || bt > td.length - EPS) continue;
@@ -441,7 +447,7 @@ export class TimberEngine {
                 members.push({
                   start: { x: bx, y: studBottom, z: bz },
                   end: { x: bx, y: studTop, z: bz },
-                  width: studWidth, depth: studDepth,
+                  width: studWidth, depth,
                   type: 'partition_backer', wallId: twId,
                 });
               }
