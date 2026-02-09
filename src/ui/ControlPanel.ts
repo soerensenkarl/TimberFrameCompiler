@@ -133,18 +133,19 @@ export class ControlPanel {
       step.dataset.phase = phase;
       step.innerHTML = `<span class="step-num">${meta.number}</span><span class="step-label">${meta.label}</span>`;
       step.addEventListener('click', () => {
-        const idx = PHASE_ORDER.indexOf(phase);
-        const curIdx = PHASE_ORDER.indexOf(this.currentPhase);
-        if (idx <= curIdx) {
-          this.currentPhase = phase;
-          this.updatePhaseUI();
-          this.onPhaseChange?.(this.currentPhase);
-        }
+        if (phase === this.currentPhase) return;
+        this.currentPhase = phase;
+        this.updatePhaseUI();
+        this.onPhaseChange?.(this.currentPhase);
       });
       stepper.appendChild(step);
       this.stepEls.set(phase, step);
     }
     this.container.appendChild(stepper);
+
+    // Scrollable body (everything below the stepper)
+    const body = document.createElement('div');
+    body.className = 'panel-body';
 
     // Phase info
     const phaseInfo = document.createElement('div');
@@ -155,15 +156,17 @@ export class ControlPanel {
     this.phaseDesc.className = 'phase-desc';
     phaseInfo.appendChild(this.phaseTitle);
     phaseInfo.appendChild(this.phaseDesc);
-    this.container.appendChild(phaseInfo);
+    body.appendChild(phaseInfo);
 
     // Drawing hint (shown during exterior/interior phases, content set per-phase)
     this.drawingHint = document.createElement('div');
     this.drawingHint.className = 'drawing-hint';
-    this.container.appendChild(this.drawingHint);
+    body.appendChild(this.drawingHint);
 
     // Openings section
     this.buildOpeningsSection();
+    // Move openings section from container into body
+    body.appendChild(this.openingsSection);
 
     // Roof configuration section
     this.roofSection = document.createElement('div');
@@ -201,7 +204,7 @@ export class ControlPanel {
     axisRow.appendChild(axisBtns);
     this.roofSection.appendChild(axisRow);
 
-    this.container.appendChild(this.roofSection);
+    body.appendChild(this.roofSection);
 
     // Frame parameters section
     this.paramSection = document.createElement('div');
@@ -239,7 +242,7 @@ export class ControlPanel {
     nogRow.appendChild(nogLabel);
     this.paramSection.appendChild(nogRow);
 
-    this.container.appendChild(this.paramSection);
+    body.appendChild(this.paramSection);
 
     // Navigation buttons
     const navGroup = document.createElement('div');
@@ -257,7 +260,7 @@ export class ControlPanel {
     this.nextBtn.addEventListener('click', () => this.goNext());
     navGroup.appendChild(this.nextBtn);
 
-    this.container.appendChild(navGroup);
+    body.appendChild(navGroup);
 
     // Stats
     const statsSection = document.createElement('div');
@@ -266,7 +269,7 @@ export class ControlPanel {
     this.statsContainer = document.createElement('div');
     this.updateStats(null, 0);
     statsSection.appendChild(this.statsContainer);
-    this.container.appendChild(statsSection);
+    body.appendChild(statsSection);
 
     // Help text
     const help = document.createElement('div');
@@ -277,7 +280,9 @@ export class ControlPanel {
       Right drag: Rotate &middot; Middle drag: Pan<br/>
       Scroll: Zoom &middot; Escape: Cancel
     `;
-    this.container.appendChild(help);
+    body.appendChild(help);
+
+    this.container.appendChild(body);
   }
 
   private buildOpeningsSection(): void {
@@ -375,13 +380,13 @@ export class ControlPanel {
     const meta = PHASE_META[this.currentPhase];
     const curIdx = PHASE_ORDER.indexOf(this.currentPhase);
 
-    // Update stepper
+    // Update stepper — all steps are always clickable
     for (const [phase, el] of this.stepEls) {
       const idx = PHASE_ORDER.indexOf(phase);
       el.classList.toggle('active', phase === this.currentPhase);
       el.classList.toggle('completed', idx < curIdx);
-      el.classList.toggle('clickable', idx < curIdx);
-      el.style.setProperty('--step-color', idx <= curIdx ? PHASE_META[phase].color : '#555');
+      el.classList.add('clickable');
+      el.style.setProperty('--step-color', PHASE_META[phase].color);
     }
 
     // Phase info
