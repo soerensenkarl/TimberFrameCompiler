@@ -245,10 +245,11 @@ export class TimberEngine {
 
       if (zone) {
         // Cripple stud above header — maintains OC layout
+        const headerHeight = studWidth * 2; // doubled header
         const crippleTop = wallHeight - plateThick * 2; // bottom of top plate
-        if (zone.headerY + EPS < crippleTop) {
+        if (zone.headerY + headerHeight + EPS < crippleTop) {
           members.push({
-            start: { x: baseX, y: zone.headerY, z: baseZ },
+            start: { x: baseX, y: zone.headerY + headerHeight, z: baseZ },
             end: { x: baseX, y: crippleTop, z: baseZ },
             width: studWidth, depth: studDepth,
             type: 'cripple_stud', wallId: wall.id,
@@ -335,8 +336,8 @@ export class TimberEngine {
     });
 
     // Jack studs (trimmers) — tight against king studs on the inside, support the header
-    const jackLeftT = kingLeftT + studDepth;
-    const jackRightT = kingRightT - studDepth;
+    const jackLeftT = kingLeftT + studWidth;
+    const jackRightT = kingRightT - studWidth;
     const jlx = wall.start.x + dir.dirX * jackLeftT;
     const jlz = wall.start.z + dir.dirZ * jackLeftT;
     const jrx = wall.start.x + dir.dirX * jackRightT;
@@ -479,7 +480,7 @@ export class TimberEngine {
     for (const z of zones) {
       allPositions.push(z.left, z.right);
       // Also add jack stud positions
-      allPositions.push(z.left + studDepth, z.right - studDepth);
+      allPositions.push(z.left + studWidth, z.right - studWidth);
     }
     allPositions.sort((a, b) => a - b);
 
