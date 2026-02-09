@@ -67,6 +67,7 @@ export class ControlPanel {
   onClear: (() => void) | null = null;
   onParamsChange: ((params: FrameParams) => void) | null = null;
   onOpeningConfigChange: ((config: OpeningConfig) => void) | null = null;
+  onLoadExample: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -121,6 +122,13 @@ export class ControlPanel {
     title.className = 'panel-title';
     title.textContent = 'Timber Frame Compiler';
     this.container.appendChild(title);
+
+    // Load example button
+    const exampleBtn = document.createElement('button');
+    exampleBtn.className = 'btn btn-example';
+    exampleBtn.textContent = 'Load Example House';
+    exampleBtn.addEventListener('click', () => this.onLoadExample?.());
+    this.container.appendChild(exampleBtn);
 
     // Phase stepper
     const stepper = document.createElement('div');
