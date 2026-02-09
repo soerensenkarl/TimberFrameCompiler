@@ -58,6 +58,9 @@ export class ControlPanel {
   // Phase-specific sections
   private drawingHint!: HTMLElement;
   private paramSection!: HTMLElement;
+  private paramSectionTitle!: HTMLElement;
+  private exteriorStudDepthRow!: HTMLElement;
+  private studDepthRow!: HTMLElement;
 
   // Opening config state
   private openingConfig: OpeningConfig = { type: 'window', width: 0.9, height: 1.2, sillHeight: 0.9 };
@@ -212,9 +215,9 @@ export class ControlPanel {
     this.paramSection = document.createElement('div');
     this.paramSection.className = 'panel-section';
 
-    const paramTitle = document.createElement('h3');
-    paramTitle.textContent = 'Frame Parameters';
-    this.paramSection.appendChild(paramTitle);
+    this.paramSectionTitle = document.createElement('h3');
+    this.paramSectionTitle.textContent = 'Frame Parameters';
+    this.paramSection.appendChild(this.paramSectionTitle);
 
     const spacingResult = this.addSlider(this.paramSection, 'Stud Spacing', this.params.studSpacing * 1000, 200, 1200, 50, 'mm');
     this.studSpacingInput = spacingResult.input;
@@ -227,9 +230,11 @@ export class ControlPanel {
 
     const extDepthResult = this.addSlider(this.paramSection, 'Exterior Timber Depth', this.params.exteriorStudDepth * 1000, 45, 250, 5, 'mm');
     this.exteriorStudDepthInput = extDepthResult.input;
+    this.exteriorStudDepthRow = extDepthResult.input.parentElement as HTMLElement;
 
     const depthResult = this.addSlider(this.paramSection, 'Interior Timber Depth', this.params.studDepth * 1000, 45, 250, 5, 'mm');
     this.studDepthInput = depthResult.input;
+    this.studDepthRow = depthResult.input.parentElement as HTMLElement;
 
     const snapResult = this.addSlider(this.paramSection, 'Grid Snap', this.params.gridSnap * 1000, 50, 1000, 50, 'mm');
     this.gridSnapInput = snapResult.input;
@@ -425,6 +430,17 @@ export class ControlPanel {
     }
     this.openingsSection.style.display = this.currentPhase === 'openings' ? 'flex' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
+
+    // Frame parameters: only show for exterior and interior phases
+    const showParams = this.currentPhase === 'exterior' || this.currentPhase === 'interior';
+    this.paramSection.style.display = showParams ? 'block' : 'none';
+    if (showParams) {
+      this.paramSectionTitle.textContent = this.currentPhase === 'exterior'
+        ? 'Exterior Wall Parameters'
+        : 'Interior Wall Parameters';
+      this.exteriorStudDepthRow.style.display = this.currentPhase === 'exterior' ? 'flex' : 'none';
+      this.studDepthRow.style.display = this.currentPhase === 'interior' ? 'flex' : 'none';
+    }
 
     // Apply roof config when entering roof or done phase for live preview
     if (this.currentPhase === 'roof' || this.currentPhase === 'done') {
