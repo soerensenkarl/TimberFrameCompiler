@@ -464,6 +464,27 @@ body {
   background: #3a3a5a;
 }
 
+.btn-checkout {
+  width: 100%;
+  padding: 12px 16px;
+  background: #2ecc71;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-checkout:hover {
+  background: #27ae60;
+}
+
+.btn-checkout:active {
+  transform: scale(0.97);
+}
+
 .nav-group {
   display: flex;
   gap: 8px;
