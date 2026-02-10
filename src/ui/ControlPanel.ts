@@ -32,10 +32,15 @@ export class ControlPanel {
 
   // Roof controls
   private roofSection!: HTMLElement;
+  private roofGableBtn!: HTMLButtonElement;
+  private roofFlatBtn!: HTMLButtonElement;
+  private pitchRow!: HTMLElement;
   private pitchInput!: HTMLInputElement;
   private overhangInput!: HTMLInputElement;
   private rafterWidthInput!: HTMLInputElement;
   private rafterDepthInput!: HTMLInputElement;
+  private axisRow!: HTMLElement;
+  private axisLabel!: HTMLElement;
   private ridgeXBtn!: HTMLButtonElement;
   private ridgeZBtn!: HTMLButtonElement;
 
@@ -183,8 +188,24 @@ export class ControlPanel {
     roofTitle.textContent = 'Roof Configuration';
     this.roofSection.appendChild(roofTitle);
 
+    // Roof type toggle (Gable / Flat)
+    const roofTypeBtns = document.createElement('div');
+    roofTypeBtns.className = 'axis-buttons';
+    this.roofGableBtn = document.createElement('button');
+    this.roofGableBtn.className = 'btn btn-axis active';
+    this.roofGableBtn.textContent = 'Gable';
+    this.roofGableBtn.addEventListener('click', () => this.setRoofType('gable'));
+    this.roofFlatBtn = document.createElement('button');
+    this.roofFlatBtn.className = 'btn btn-axis';
+    this.roofFlatBtn.textContent = 'Flat';
+    this.roofFlatBtn.addEventListener('click', () => this.setRoofType('flat'));
+    roofTypeBtns.appendChild(this.roofGableBtn);
+    roofTypeBtns.appendChild(this.roofFlatBtn);
+    this.roofSection.appendChild(roofTypeBtns);
+
     const pitchResult = this.addSlider(this.roofSection, 'Pitch Angle', 30, 10, 60, 1, '°');
     this.pitchInput = pitchResult.input;
+    this.pitchRow = pitchResult.input.parentElement as HTMLElement;
 
     const overhangResult = this.addSlider(this.roofSection, 'Overhang', 300, 0, 1000, 50, 'mm');
     this.overhangInput = overhangResult.input;
@@ -195,12 +216,12 @@ export class ControlPanel {
     const rafterDepthResult = this.addSlider(this.roofSection, 'Rafter Depth', 140, 90, 300, 5, 'mm');
     this.rafterDepthInput = rafterDepthResult.input;
 
-    const axisRow = document.createElement('div');
-    axisRow.className = 'axis-toggle';
-    const axisLabel = document.createElement('div');
-    axisLabel.className = 'axis-label';
-    axisLabel.textContent = 'Ridge Direction';
-    axisRow.appendChild(axisLabel);
+    this.axisRow = document.createElement('div');
+    this.axisRow.className = 'axis-toggle';
+    this.axisLabel = document.createElement('div');
+    this.axisLabel.className = 'axis-label';
+    this.axisLabel.textContent = 'Ridge Direction';
+    this.axisRow.appendChild(this.axisLabel);
 
     const axisBtns = document.createElement('div');
     axisBtns.className = 'axis-buttons';
@@ -214,8 +235,8 @@ export class ControlPanel {
     this.ridgeZBtn.addEventListener('click', () => this.setRidgeAxis('z'));
     axisBtns.appendChild(this.ridgeXBtn);
     axisBtns.appendChild(this.ridgeZBtn);
-    axisRow.appendChild(axisBtns);
-    this.roofSection.appendChild(axisRow);
+    this.axisRow.appendChild(axisBtns);
+    this.roofSection.appendChild(this.axisRow);
 
     body.appendChild(this.roofSection);
 
@@ -507,6 +528,17 @@ export class ControlPanel {
     }
   }
 
+  private setRoofType(type: 'gable' | 'flat'): void {
+    this.roofGableBtn.classList.toggle('active', type === 'gable');
+    this.roofFlatBtn.classList.toggle('active', type === 'flat');
+    const isFlat = type === 'flat';
+    this.pitchRow.style.display = isFlat ? 'none' : 'flex';
+    this.axisRow.style.display = isFlat ? 'none' : 'flex';
+    if (this.currentPhase === 'roof') {
+      this.readParams();
+    }
+  }
+
   private setRidgeAxis(axis: 'x' | 'z'): void {
     this.ridgeXBtn.classList.toggle('active', axis === 'x');
     this.ridgeZBtn.classList.toggle('active', axis === 'z');
@@ -515,9 +547,13 @@ export class ControlPanel {
     }
   }
 
+  private getSelectedRoofType(): 'gable' | 'flat' {
+    return this.roofFlatBtn.classList.contains('active') ? 'flat' : 'gable';
+  }
+
   private buildRoofConfig(): RoofConfig {
     return {
-      type: 'gable',
+      type: this.getSelectedRoofType(),
       pitchAngle: parseFloat(this.pitchInput.value),
       overhang: parseFloat(this.overhangInput.value) / 1000,
       ridgeAxis: this.ridgeXBtn.classList.contains('active') ? 'x' : 'z',

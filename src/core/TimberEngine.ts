@@ -536,10 +536,74 @@ export class TimberEngine {
       maxZ = Math.max(maxZ, w.start.z, w.end.z);
     }
 
-    const pitchRad = (roof.pitchAngle * Math.PI) / 180;
     const overhang = roof.overhang;
     const rafterWidth = roof.rafterWidth;
     const rafterDepth = roof.rafterDepth;
+
+    // ── Flat roof ──
+    if (roof.type === 'flat') {
+      const spanX = maxX - minX;
+      const spanZ = maxZ - minZ;
+
+      // Joists span the shorter direction for structural efficiency
+      const joistAlongZ = spanZ <= spanX;
+      const primarySpan = joistAlongZ ? spanZ : spanX;
+      const secondarySpan = joistAlongZ ? spanX : spanZ;
+
+      const joistCount = Math.max(1, Math.round(secondarySpan / studSpacing));
+      const joistStep = secondarySpan / joistCount;
+
+      for (let i = 0; i <= joistCount; i++) {
+        if (joistAlongZ) {
+          const x = minX + i * joistStep;
+          members.push({
+            start: { x, y: wallHeight, z: minZ - overhang },
+            end: { x, y: wallHeight, z: maxZ + overhang },
+            width: rafterWidth, depth: rafterDepth,
+            type: 'ceiling_joist', wallId: '',
+          });
+        } else {
+          const z = minZ + i * joistStep;
+          members.push({
+            start: { x: minX - overhang, y: wallHeight, z },
+            end: { x: maxX + overhang, y: wallHeight, z },
+            width: rafterWidth, depth: rafterDepth,
+            type: 'ceiling_joist', wallId: '',
+          });
+        }
+      }
+
+      // Fascia boards on all four edges
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+
+      return members;
+    }
+
+    // ── Gable roof ──
+    const pitchRad = (roof.pitchAngle * Math.PI) / 180;
 
     const ridgeWidth = rafterWidth * 1.5;
     const ridgeDepth = rafterDepth * 1.2;
