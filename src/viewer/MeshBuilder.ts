@@ -17,7 +17,6 @@ const MEMBER_COLORS: Record<MemberType, number> = {
   trimmer: 0xbf8a50,
   sill_plate: 0xa07840,
   cripple_stud: 0x9e8a60,
-  corner_stud: 0xdab870,
   partition_backer: 0xc0a060,
 };
 
@@ -147,7 +146,7 @@ export class MeshBuilder {
     let studs = 0, plates = 0, noggings = 0, rafters = 0;
     for (const m of frame.members) {
       if (m.type === 'stud' || m.type === 'king_stud' || m.type === 'trimmer' || m.type === 'cripple_stud'
-        || m.type === 'corner_stud' || m.type === 'partition_backer') studs++;
+        || m.type === 'partition_backer') studs++;
       else if (m.type === 'nogging') noggings++;
       else if (m.type === 'rafter' || m.type === 'ridge_beam' || m.type === 'collar_tie'
         || m.type === 'ceiling_joist' || m.type === 'fascia') rafters++;

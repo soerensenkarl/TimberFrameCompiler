@@ -7,7 +7,6 @@ import { Wall, Opening, TimberMember, TimberFrame, FrameParams, Point2D } from '
  * - Bottom plate (sole plate) runs full wall length
  * - Single top plate at top of wall
  * - Studs on-center (OC) layout from the wall start
- * - 3-stud corner assemblies at L-junctions (California corners)
  * - Partition backers (ladder blocking) at T-junctions
  * - King studs + jack studs (trimmers) at openings
  * - Built-up headers sized to span, bearing on jack studs
@@ -70,7 +69,7 @@ export class TimberEngine {
       members.push(...this.generateWallFrame(wall, dir, wallParams, wallOpenings, junctions, walls, wallDirs));
     }
 
-    // Corner assemblies and partition backers
+    // Partition backers at T-junctions
     members.push(...this.generateJunctionFraming(junctions, walls, wallDirs, params));
 
     // Roof
@@ -212,9 +211,10 @@ export class TimberEngine {
     // Standard: first stud at 0 (wall start), then every studSpacing OC, end stud at wallLength
     const studPositions = this.computeStudPositionsOC(dir.length, studSpacing);
 
-    // Identify which stud positions are at junction points (don't double up with corner/partition studs)
+    // Identify which stud positions are at T-junction points (don't double up with partition backer studs)
     const junctionPositions = new Set<number>();
     for (const junc of junctions) {
+      if (junc.type !== 'tee') continue; // Only skip studs for T-junctions; corners use regular studs
       const t = this.projectPointOntoWall(junc.point, wall, dir);
       if (t !== null) {
         // Mark positions near this junction
@@ -256,7 +256,7 @@ export class TimberEngine {
           });
         }
       } else {
-        // Skip if this is a junction position (corner/partition studs handle it)
+        // Skip if this is a T-junction position (partition backer studs handle it)
         if (junctionPositions.has(t) && t > EPS && t < dir.length - EPS) continue;
 
         // Full-height stud: top of bottom plate to bottom of top plate
@@ -371,7 +371,7 @@ export class TimberEngine {
     }
   }
 
-  // ─── Junction framing (corners and T-intersections) ───
+  // ─── Junction framing (T-intersections) ───
 
   private generateJunctionFraming(
     junctions: Junction[],
@@ -387,27 +387,8 @@ export class TimberEngine {
 
     for (const junc of junctions) {
       if (junc.type === 'corner') {
-        // L-corner: 3-stud assembly
-        // Place extra studs at the corner point for each connecting wall
-        // This creates a nailing surface for interior finish on both walls
-        const jWalls = junc.wallIds.map(id => walls.find(w => w.id === id)!);
-
-        for (const w of jWalls) {
-          const d = wallDirs.get(w.id)!;
-          const depth = w.wallType === 'exterior' ? params.exteriorStudDepth : params.studDepth;
-          // Offset a backer stud along the wall normal (creates nailing surface)
-          const bx = junc.point.x + d.normX * depth;
-          const bz = junc.point.z + d.normZ * depth;
-
-          if (studTop > studBottom + EPS) {
-            members.push({
-              start: { x: bx, y: studBottom, z: bz },
-              end: { x: bx, y: studTop, z: bz },
-              width: studWidth, depth,
-              type: 'corner_stud', wallId: w.id,
-            });
-          }
-        }
+        // Corners are handled by regular studs at wall endpoints — no extra members needed
+        continue;
       } else {
         // T-junction: partition backer (ladder blocking or extra stud)
         // Find the wall that is being intersected (the "through" wall)

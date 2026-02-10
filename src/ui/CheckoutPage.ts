@@ -20,7 +20,6 @@ const MEMBER_LABELS: Record<MemberType, string> = {
   trimmer: 'Trimmer',
   sill_plate: 'Sill Plate',
   cripple_stud: 'Cripple Stud',
-  corner_stud: 'Corner Stud',
   partition_backer: 'Partition Backer',
 };
 
