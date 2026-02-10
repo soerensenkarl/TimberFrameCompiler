@@ -772,11 +772,11 @@ body {
 
 .checkout-container {
   width: 100%;
-  max-width: 720px;
+  max-width: 640px;
   padding: 24px 20px 40px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .checkout-header {
@@ -809,116 +809,132 @@ body {
   margin: 0;
 }
 
+/* 3D preview */
 .checkout-preview {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #2a2a4a;
   background: #1a1a2e;
+  height: 300px;
+  cursor: grab;
 }
 
-.checkout-preview-img {
+.checkout-preview:active {
+  cursor: grabbing;
+}
+
+.checkout-preview canvas {
   display: block;
-  width: 100%;
-  height: auto;
+  width: 100% !important;
+  height: 100% !important;
 }
 
-.checkout-summary-header {
+/* Sections */
+.checkout-section {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.checkout-summary-header h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
-}
-
-.checkout-meta {
-  font-size: 12px;
-  color: #888;
-}
-
-.checkout-table {
-  background: #16213e;
-  border-radius: 8px;
-  border: 1px solid #2a2a4a;
-  overflow: hidden;
-}
-
-.checkout-table-head,
-.checkout-table-row,
-.checkout-table-total {
-  display: grid;
-  grid-template-columns: 1fr 50px 60px 70px 80px;
-  padding: 10px 14px;
-  gap: 8px;
-  align-items: center;
-}
-
-.checkout-table-head {
-  background: #1e2d4f;
+.checkout-section-title {
   font-size: 11px;
   font-weight: 600;
   color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #1e2540;
 }
 
-.checkout-table-row {
+.checkout-dim {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #666;
+}
+
+/* Key-value pairs (building overview) */
+.checkout-kv {
+  display: flex;
+  justify-content: space-between;
   font-size: 13px;
-  border-top: 1px solid #1e2540;
+  padding: 3px 0;
 }
 
-.checkout-table-row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.015);
+.checkout-kv span:first-child {
+  color: #999;
 }
 
-.checkout-table-total {
-  border-top: 2px solid #2a2a4a;
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(46, 204, 113, 0.06);
+.checkout-kv span:last-child {
+  color: #ddd;
 }
 
-.col-qty,
-.col-length,
-.col-rate,
-.col-subtotal {
+/* Timber list */
+.checkout-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkout-row {
+  display: flex;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+
+.checkout-row:last-child {
+  border-bottom: none;
+}
+
+.checkout-row-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-row-name {
+  font-size: 13px;
+  color: #ddd;
+}
+
+.checkout-row-dim {
+  font-size: 11px;
+  color: #666;
+  margin-left: 6px;
+}
+
+.checkout-row-mid {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.checkout-row-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2ecc71;
+  white-space: nowrap;
+  min-width: 64px;
   text-align: right;
 }
 
-.col-subtotal {
-  color: #2ecc71;
-  font-weight: 600;
-}
-
-.checkout-table-total .col-subtotal {
-  font-size: 15px;
-}
-
-.checkout-footer {
-  margin-top: 4px;
-}
-
-.checkout-total-banner {
+/* Total */
+.checkout-total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #16213e, #1a2940);
-  border: 1px solid #2ecc71;
-  border-radius: 10px;
-  padding: 16px 20px;
-  font-size: 18px;
+  padding: 14px 16px;
+  background: rgba(46, 204, 113, 0.06);
+  border: 1px solid rgba(46, 204, 113, 0.25);
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 700;
   color: #fff;
 }
 
 .checkout-total-price {
   color: #2ecc71;
-  font-size: 24px;
+  font-size: 22px;
 }
 
 @media (max-width: 768px) {
@@ -926,26 +942,26 @@ body {
     padding: 16px 12px 32px;
   }
 
-  .checkout-table-head,
-  .checkout-table-row,
-  .checkout-table-total {
-    grid-template-columns: 1fr 36px 50px 58px 66px;
-    padding: 8px 10px;
-    font-size: 12px;
-    gap: 4px;
-  }
-
-  .checkout-table-head {
-    font-size: 10px;
+  .checkout-preview {
+    height: 220px;
   }
 
   .checkout-title {
     font-size: 18px;
   }
 
-  .checkout-total-banner {
-    padding: 12px 16px;
-    font-size: 16px;
+  .checkout-row {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+
+  .checkout-row-mid {
+    font-size: 11px;
+  }
+
+  .checkout-total-row {
+    padding: 12px 14px;
+    font-size: 15px;
   }
 
   .checkout-total-price {
