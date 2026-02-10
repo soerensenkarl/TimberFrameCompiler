@@ -187,14 +187,13 @@ controlPanel.onBuy = () => {
   regenerate();
   if (!lastFrame) return;
 
-  // Capture a screenshot of the current 3D view
-  sceneManager.renderer.render(sceneManager.scene, sceneManager.camera);
-  const screenshot = sceneManager.renderer.domElement.toDataURL('image/png');
+  const params = controlPanel.getParams();
+  const openings = wallManager.getOpenings();
 
   // Hide the main app and show checkout
   const appEl = document.getElementById('app')!;
   appEl.style.display = 'none';
-  checkoutPage.show(lastFrame, screenshot);
+  checkoutPage.show(lastFrame, openings, params);
 };
 
 // Wire: checkout back button returns to designer
