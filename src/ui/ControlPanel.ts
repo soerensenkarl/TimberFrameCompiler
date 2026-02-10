@@ -57,6 +57,7 @@ export class ControlPanel {
   // Navigation
   private nextBtn!: HTMLButtonElement;
   private backBtn!: HTMLButtonElement;
+  private checkoutBtn!: HTMLButtonElement;
 
   // Stats
   private statsContainer!: HTMLElement;
@@ -302,6 +303,13 @@ export class ControlPanel {
 
     body.appendChild(navGroup);
 
+    // Checkout button (always visible, full width)
+    this.checkoutBtn = document.createElement('button');
+    this.checkoutBtn.className = 'btn btn-checkout';
+    this.checkoutBtn.textContent = 'Checkout';
+    this.checkoutBtn.addEventListener('click', () => this.onBuy?.());
+    body.appendChild(this.checkoutBtn);
+
     // Stats
     const statsSection = document.createElement('div');
     statsSection.className = 'status-bar';
@@ -483,10 +491,6 @@ export class ControlPanel {
     if (this.currentPhase === 'done') {
       this.nextBtn.textContent = 'Start Over';
       this.nextBtn.className = 'btn btn-danger btn-next';
-    } else if (this.currentPhase === 'roof') {
-      this.nextBtn.textContent = 'Buy';
-      this.nextBtn.className = 'btn btn-primary btn-next';
-      this.nextBtn.style.background = '#2ecc71';
     } else {
       const nextPhase = PHASE_ORDER[curIdx + 1];
       this.nextBtn.textContent = `Next: ${PHASE_META[nextPhase].label}`;
@@ -502,11 +506,6 @@ export class ControlPanel {
       this.currentPhase = 'exterior';
       this.updatePhaseUI();
       this.onPhaseChange?.(this.currentPhase);
-      return;
-    }
-
-    if (this.currentPhase === 'roof') {
-      this.onBuy?.();
       return;
     }
 
