@@ -55,10 +55,10 @@ export interface TimberFrame {
 
 /** Roof configuration */
 export interface RoofConfig {
-  type: 'gable';
-  pitchAngle: number;   // degrees
+  type: 'gable' | 'flat';
+  pitchAngle: number;   // degrees (ignored for flat)
   overhang: number;      // meters
-  ridgeAxis: 'x' | 'z'; // which axis the ridge runs along
+  ridgeAxis: 'x' | 'z'; // gable: ridge direction; flat: joist span direction
   rafterWidth: number;   // meters — cross-section width (narrow face)
   rafterDepth: number;   // meters — cross-section depth (tall face)
 }
