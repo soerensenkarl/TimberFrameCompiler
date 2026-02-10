@@ -24,6 +24,10 @@ const MEMBER_LABELS: Record<MemberType, string> = {
   partition_backer: 'Partition Backer',
 };
 
+const ROOF_TYPES: Set<MemberType> = new Set([
+  'rafter', 'ridge_beam', 'collar_tie', 'ceiling_joist', 'fascia',
+]);
+
 /** Price per linear meter by cross-section area bracket ($/m) */
 function pricePerMeter(width: number, depth: number): number {
   const area = width * depth * 1e6; // mm²
@@ -34,24 +38,35 @@ function pricePerMeter(width: number, depth: number): number {
   return 9.80;
 }
 
-/** Group key: type + cross-section dims */
-function groupKey(type: MemberType, w: number, d: number): string {
-  return `${type}|${Math.round(w * 1000)}x${Math.round(d * 1000)}`;
-}
+type WallCategory = 'exterior' | 'interior' | 'roof';
 
 interface LineItem {
-  type: MemberType;
   label: string;
   sectionW: number; // mm
   sectionD: number; // mm
   count: number;
   totalLength: number; // meters
-  unitPrice: number;   // $/m
   subtotal: number;
 }
 
-function buildLineItems(frame: TimberFrame): LineItem[] {
-  const groups = new Map<string, LineItem>();
+interface CategoryGroup {
+  category: WallCategory;
+  title: string;
+  items: LineItem[];
+  subtotal: number;
+  pieces: number;
+  length: number;
+}
+
+function buildGroupedItems(frame: TimberFrame): CategoryGroup[] {
+  // Build wallId → wallType lookup
+  const wallTypeMap = new Map<string, 'exterior' | 'interior'>();
+  for (const w of frame.sourceWalls) {
+    wallTypeMap.set(w.id, w.wallType);
+  }
+
+  // Group key: category|type|WxD
+  const groups = new Map<string, { cat: WallCategory; item: LineItem }>();
 
   for (const m of frame.members) {
     const dx = m.end.x - m.start.x;
@@ -59,34 +74,84 @@ function buildLineItems(frame: TimberFrame): LineItem[] {
     const dz = m.end.z - m.start.z;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
     const ppm = pricePerMeter(m.width, m.depth);
-    const key = groupKey(m.type, m.width, m.depth);
+
+    let cat: WallCategory;
+    if (ROOF_TYPES.has(m.type)) {
+      cat = 'roof';
+    } else {
+      const wt = wallTypeMap.get(m.wallId);
+      cat = wt ?? 'exterior';
+    }
+
+    const sw = Math.round(m.width * 1000);
+    const sd = Math.round(m.depth * 1000);
+    const key = `${cat}|${m.type}|${sw}x${sd}`;
 
     const existing = groups.get(key);
     if (existing) {
-      existing.count++;
-      existing.totalLength += length;
-      existing.subtotal += length * ppm;
+      existing.item.count++;
+      existing.item.totalLength += length;
+      existing.item.subtotal += length * ppm;
     } else {
       groups.set(key, {
-        type: m.type,
-        label: MEMBER_LABELS[m.type] ?? m.type,
-        sectionW: Math.round(m.width * 1000),
-        sectionD: Math.round(m.depth * 1000),
-        count: 1,
-        totalLength: length,
-        unitPrice: ppm,
-        subtotal: length * ppm,
+        cat,
+        item: {
+          label: MEMBER_LABELS[m.type] ?? m.type,
+          sectionW: sw,
+          sectionD: sd,
+          count: 1,
+          totalLength: length,
+          subtotal: length * ppm,
+        },
       });
     }
   }
 
-  return Array.from(groups.values());
+  // Collect into categories
+  const catMap = new Map<WallCategory, LineItem[]>();
+  for (const { cat, item } of groups.values()) {
+    let arr = catMap.get(cat);
+    if (!arr) { arr = []; catMap.set(cat, arr); }
+    arr.push(item);
+  }
+
+  const order: { cat: WallCategory; title: string }[] = [
+    { cat: 'exterior', title: 'Exterior Walls' },
+    { cat: 'interior', title: 'Interior Walls' },
+    { cat: 'roof', title: 'Roof' },
+  ];
+
+  const result: CategoryGroup[] = [];
+  for (const { cat, title } of order) {
+    const items = catMap.get(cat);
+    if (!items || items.length === 0) continue;
+    result.push({
+      category: cat,
+      title,
+      items,
+      subtotal: items.reduce((s, it) => s + it.subtotal, 0),
+      pieces: items.reduce((s, it) => s + it.count, 0),
+      length: items.reduce((s, it) => s + it.totalLength, 0),
+    });
+  }
+  return result;
 }
 
 function wallLength(w: Wall): number {
   const dx = w.end.x - w.start.x;
   const dz = w.end.z - w.start.z;
   return Math.sqrt(dx * dx + dz * dz);
+}
+
+function renderRow(it: LineItem): string {
+  return `<div class="checkout-row">
+    <div class="checkout-row-left">
+      <span class="checkout-row-name">${it.label}</span>
+      <span class="checkout-row-dim">${it.sectionW} &times; ${it.sectionD} mm</span>
+    </div>
+    <div class="checkout-row-mid">${it.count} pcs &middot; ${it.totalLength.toFixed(1)} m</div>
+    <div class="checkout-row-price">$${it.subtotal.toFixed(2)}</div>
+  </div>`;
 }
 
 export class CheckoutPage {
@@ -104,10 +169,10 @@ export class CheckoutPage {
 
   show(frame: TimberFrame, openings: Opening[], params: FrameParams): void {
     // ─── Compute data ───
-    const items = buildLineItems(frame);
-    const grandTotal = items.reduce((s, it) => s + it.subtotal, 0);
-    const totalPieces = items.reduce((s, it) => s + it.count, 0);
-    const totalLength = items.reduce((s, it) => s + it.totalLength, 0);
+    const groups = buildGroupedItems(frame);
+    const grandTotal = groups.reduce((s, g) => s + g.subtotal, 0);
+    const totalPieces = groups.reduce((s, g) => s + g.pieces, 0);
+    const totalLength = groups.reduce((s, g) => s + g.length, 0);
 
     const extWalls = frame.sourceWalls.filter(w => w.wallType === 'exterior');
     const intWalls = frame.sourceWalls.filter(w => w.wallType === 'interior');
@@ -157,20 +222,18 @@ export class CheckoutPage {
 
         <div class="checkout-section">
           <div class="checkout-section-title">Timber &nbsp;<span class="checkout-dim">${totalPieces} pcs &middot; ${totalLength.toFixed(1)} m</span></div>
-          <div class="checkout-list">
-            ${items.map(it => `
-              <div class="checkout-row">
-                <div class="checkout-row-left">
-                  <span class="checkout-row-name">${it.label}</span>
-                  <span class="checkout-row-dim">${it.sectionW} &times; ${it.sectionD} mm</span>
-                </div>
-                <div class="checkout-row-mid">
-                  ${it.count} pcs &middot; ${it.totalLength.toFixed(1)} m
-                </div>
-                <div class="checkout-row-price">$${it.subtotal.toFixed(2)}</div>
+          ${groups.map(g => `
+            <div class="checkout-group">
+              <div class="checkout-group-title">${g.title}<span class="checkout-dim">${g.pieces} pcs &middot; ${g.length.toFixed(1)} m</span></div>
+              <div class="checkout-list">
+                ${g.items.map(renderRow).join('')}
               </div>
-            `).join('')}
-          </div>
+              <div class="checkout-group-subtotal">
+                <span>Subtotal</span>
+                <span>$${g.subtotal.toFixed(2)}</span>
+              </div>
+            </div>
+          `).join('')}
         </div>
 
         <div class="checkout-total-row">
@@ -186,8 +249,8 @@ export class CheckoutPage {
 
     this.overlay.style.display = 'flex';
 
-    // ─── 3D preview ───
-    this.setup3DPreview(frame);
+    // Defer 3D setup so the browser computes layout first
+    requestAnimationFrame(() => this.setup3DPreview(frame));
   }
 
   hide(): void {
@@ -205,11 +268,15 @@ export class CheckoutPage {
     const container = this.overlay.querySelector('#checkout-3d') as HTMLElement;
     if (!container) return;
 
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w === 0 || h === 0) return;
+
     // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2e);
 
-    // Lighting (same as main viewer)
+    // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
     const dir = new THREE.DirectionalLight(0xffffff, 1.2);
     dir.position.set(10, 15, 10);
@@ -230,8 +297,6 @@ export class CheckoutPage {
     const maxDim = Math.max(size.x, size.y, size.z);
 
     // Camera
-    const w = container.clientWidth || 600;
-    const h = container.clientHeight || 350;
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 200);
     const dist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.3;
     camera.position.set(center.x + dist * 0.6, center.y + dist * 0.4, center.z + dist * 0.6);
