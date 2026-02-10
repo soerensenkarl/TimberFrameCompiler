@@ -15,6 +15,7 @@ export class ControlPanel {
   private container: HTMLElement;
   private params: FrameParams;
   private currentPhase: Phase = 'exterior';
+  private roofVisited = false;
 
   // Phase step elements
   private stepEls: Map<Phase, HTMLElement> = new Map();
@@ -101,7 +102,11 @@ export class ControlPanel {
     return { ...this.openingConfig };
   }
 
-  setPhase(phase: Phase): void {
+  setPhase(phase: Phase, resetRoof = false): void {
+    if (resetRoof) {
+      this.roofVisited = false;
+      this.params.roof = null;
+    }
     this.currentPhase = phase;
     this.updatePhaseUI();
   }
@@ -480,9 +485,16 @@ export class ControlPanel {
       this.studDepthRow.style.display = this.currentPhase === 'interior' ? 'flex' : 'none';
     }
 
-    // Apply roof config when entering roof or done phase for live preview
+    // Track whether the user has visited the roof tab
     if (this.currentPhase === 'roof' || this.currentPhase === 'done') {
+      this.roofVisited = true;
+    }
+
+    // Apply roof config only if the user has actually visited the roof tab
+    if ((this.currentPhase === 'roof' || this.currentPhase === 'done') && this.roofVisited) {
       this.params.roof = this.buildRoofConfig();
+    } else if (!this.roofVisited) {
+      this.params.roof = null;
     }
 
     // Navigation buttons
@@ -503,6 +515,8 @@ export class ControlPanel {
   private goNext(): void {
     if (this.currentPhase === 'done') {
       this.onClear?.();
+      this.roofVisited = false;
+      this.params.roof = null;
       this.currentPhase = 'exterior';
       this.updatePhaseUI();
       this.onPhaseChange?.(this.currentPhase);
@@ -610,9 +624,11 @@ export class ControlPanel {
       exteriorStudDepth: parseFloat(this.exteriorStudDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
-      roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')
-        ? this.buildRoofConfig()
-        : this.params.roof,
+      roof: !this.roofVisited
+        ? null
+        : (this.currentPhase === 'roof' || this.currentPhase === 'done')
+          ? this.buildRoofConfig()
+          : this.params.roof,
     };
     this.onParamsChange?.(this.params);
   }

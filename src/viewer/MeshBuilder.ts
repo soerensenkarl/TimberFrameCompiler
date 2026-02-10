@@ -127,6 +127,22 @@ export class MeshBuilder {
     return mat;
   }
 
+  private static readonly ROOF_MEMBER_TYPES: Set<MemberType> = new Set([
+    'rafter', 'ridge_beam', 'collar_tie', 'ceiling_joist', 'fascia',
+  ]);
+
+  ghostRoofMembers(group: THREE.Group): void {
+    for (const child of group.children) {
+      if (child instanceof THREE.Mesh && MeshBuilder.ROOF_MEMBER_TYPES.has(child.userData.type)) {
+        const mat = (child.material as THREE.MeshStandardMaterial).clone();
+        mat.transparent = true;
+        mat.opacity = 0.15;
+        mat.depthWrite = false;
+        child.material = mat;
+      }
+    }
+  }
+
   getMemberCount(frame: TimberFrame): { studs: number; plates: number; noggings: number; rafters: number; total: number } {
     let studs = 0, plates = 0, noggings = 0, rafters = 0;
     for (const m of frame.members) {
