@@ -5,7 +5,7 @@ import { Wall, Opening, TimberMember, TimberFrame, FrameParams, Point2D } from '
  * following standard platform-framing conventions:
  *
  * - Bottom plate (sole plate) runs full wall length
- * - Double top plate with staggered laps at corners/intersections
+ * - Single top plate at top of wall
  * - Studs on-center (OC) layout from the wall start
  * - 3-stud corner assemblies at L-junctions (California corners)
  * - Partition backers (ladder blocking) at T-junctions
@@ -194,15 +194,6 @@ export class TimberEngine {
     members.push(this.createPlate(wall, params, 'bottom'));
     // Top plate: full wall length
     members.push(this.createPlate(wall, params, 'top'));
-    // Double top plate: full wall length, offset up by one plate thickness
-    members.push({
-      start: { x: wall.start.x, y: wallHeight - plateThick, z: wall.start.z },
-      end: { x: wall.end.x, y: wallHeight - plateThick, z: wall.end.z },
-      width: plateThick,
-      depth: studDepth,
-      type: 'double_top_plate',
-      wallId: wall.id,
-    });
 
     // ── Build opening zones ──
     const zones: OpeningZone[] = openings.map(o => ({
@@ -719,8 +710,8 @@ export class TimberEngine {
     if (position === 'bottom') {
       y = 0;
     } else {
-      // First top plate sits just below the double top plate
-      y = params.wallHeight - plateThick * 2;
+      // Top plate sits at top of wall, one plate thickness down from wallHeight
+      y = params.wallHeight - plateThick;
     }
     return {
       start: { x: wall.start.x, y, z: wall.start.z },
