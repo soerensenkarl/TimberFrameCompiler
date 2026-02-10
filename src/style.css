@@ -586,6 +586,38 @@ body {
   transform: translateX(-50%) scale(0.93);
 }
 
+/* ─── New house button ─── */
+
+.new-house-btn {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  padding: 10px 28px;
+  background: #e67e22;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  /* Desktop: above the side panel top-right area */
+  top: 16px;
+  right: 316px;
+}
+
+.new-house-btn.visible {
+  display: block;
+}
+
+.new-house-btn:hover {
+  background: #d35400;
+}
+
+.new-house-btn:active {
+  transform: scale(0.95);
+}
+
 /* ─── Pull-up handle ─── */
 
 .pull-handle {
@@ -653,6 +685,11 @@ body {
     flex-shrink: 0;
   }
 
+  .new-house-btn {
+    top: auto;
+    right: auto;
+  }
+
   /* Larger touch targets */
   .btn {
     padding: 14px 18px;
@@ -688,6 +725,16 @@ body {
 /* ─── Mobile portrait: bottom sheet ─── */
 
 @media (max-width: 768px) and (orientation: portrait) {
+  .new-house-btn {
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .new-house-btn:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+
   #controls {
     position: fixed;
     left: 0;
@@ -713,6 +760,11 @@ body {
 /* ─── Mobile landscape: right side panel ─── */
 
 @media (max-width: 768px) and (orientation: landscape) {
+  .new-house-btn {
+    top: 16px;
+    right: 72px;
+  }
+
   #controls {
     position: fixed;
     top: 0;

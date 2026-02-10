@@ -135,6 +135,32 @@ function onPhaseChange(phase: Phase): void {
   regenerate();
 }
 
+// ─── "New house" button (dismisses preloaded example) ───
+
+const newHouseBtn = document.createElement('button');
+newHouseBtn.className = 'new-house-btn';
+newHouseBtn.textContent = 'New house';
+document.getElementById('app')!.appendChild(newHouseBtn);
+
+newHouseBtn.addEventListener('click', () => {
+  // Clear everything
+  wallManager.clear();
+  clearFrame();
+  clearPreviews();
+  footprintTool.reset();
+  drawingTool.cancelDrawing();
+  openingTool.reset();
+  controlPanel.updateStats(null, 0);
+  controlPanel.updateOpeningCount(0);
+
+  // Reset to exterior phase
+  controlPanel.setPhase('exterior');
+  onPhaseChange('exterior');
+
+  // Hide the button
+  newHouseBtn.classList.remove('visible');
+});
+
 // Wire: phase changes from control panel
 controlPanel.onPhaseChange = onPhaseChange;
 
@@ -190,6 +216,9 @@ controlPanel.onLoadExample = () => {
   const params = controlPanel.getParams();
   params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x', rafterWidth: 0.045, rafterDepth: 0.14 };
   onPhaseChange('done');
+
+  // Show "New house" button
+  newHouseBtn.classList.add('visible');
 };
 
 // ─── Mobile pull-up handle ───
@@ -208,8 +237,13 @@ sceneManager.onUpdate = () => {
   footprintTool.updateDimensionLabels();
 };
 
-// Start in exterior phase with footprint tool
-footprintTool.enable();
-activeToolRef = footprintTool;
-drawToggle.style.display = isTouchDevice ? 'flex' : 'none';
+// ─── Preload example house on startup ───
+
+wallManager.loadExampleHouse();
+controlPanel.setPhase('done');
+const preloadParams = controlPanel.getParams();
+preloadParams.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x', rafterWidth: 0.045, rafterDepth: 0.14 };
+onPhaseChange('done');
+newHouseBtn.classList.add('visible');
+
 sceneManager.start();
