@@ -472,8 +472,8 @@ export class ControlPanel {
       this.studDepthRow.style.display = this.currentPhase === 'interior' ? 'flex' : 'none';
     }
 
-    // Apply roof config when entering roof or done phase for live preview
-    if (this.currentPhase === 'roof' || this.currentPhase === 'done') {
+    // Apply roof config when entering exterior, roof, or done phase for live preview
+    if (this.currentPhase === 'exterior' || this.currentPhase === 'roof' || this.currentPhase === 'done') {
       this.params.roof = this.buildRoofConfig();
     }
 
@@ -611,7 +611,7 @@ export class ControlPanel {
       exteriorStudDepth: parseFloat(this.exteriorStudDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
-      roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')
+      roof: (this.currentPhase === 'exterior' || this.currentPhase === 'roof' || this.currentPhase === 'done')
         ? this.buildRoofConfig()
         : this.params.roof,
     };
