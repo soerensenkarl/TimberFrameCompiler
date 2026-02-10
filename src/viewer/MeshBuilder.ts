@@ -6,7 +6,6 @@ const MEMBER_COLORS: Record<MemberType, number> = {
   king_stud: 0xd4a862,
   bottom_plate: 0xa07840,
   top_plate: 0xa07840,
-  double_top_plate: 0x8a6830,
   nogging: 0xb8925a,
   rafter: 0x8B6914,
   ridge_beam: 0x704214,
@@ -135,7 +134,7 @@ export class MeshBuilder {
       else if (m.type === 'nogging') noggings++;
       else if (m.type === 'rafter' || m.type === 'ridge_beam' || m.type === 'collar_tie'
         || m.type === 'ceiling_joist' || m.type === 'fascia') rafters++;
-      else plates++; // bottom_plate, top_plate, double_top_plate, header, sill_plate
+      else plates++; // bottom_plate, top_plate, header, sill_plate
     }
     return { studs, plates, noggings, rafters, total: frame.members.length };
   }
