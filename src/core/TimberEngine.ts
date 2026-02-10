@@ -559,7 +559,7 @@ export class TimberEngine {
           members.push({
             start: { x, y: wallHeight, z: minZ - overhang },
             end: { x, y: wallHeight, z: maxZ + overhang },
-            width: rafterWidth, depth: rafterDepth,
+            width: rafterDepth, depth: rafterWidth,
             type: 'ceiling_joist', wallId: '',
           });
         } else {
@@ -567,7 +567,7 @@ export class TimberEngine {
           members.push({
             start: { x: minX - overhang, y: wallHeight, z },
             end: { x: maxX + overhang, y: wallHeight, z },
-            width: rafterWidth, depth: rafterDepth,
+            width: rafterDepth, depth: rafterWidth,
             type: 'ceiling_joist', wallId: '',
           });
         }
