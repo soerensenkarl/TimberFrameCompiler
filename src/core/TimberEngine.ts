@@ -573,29 +573,29 @@ export class TimberEngine {
         }
       }
 
-      // Fascia boards on all four edges
+      // Fascia boards on all four edges (standing on edge)
       members.push({
         start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
         end: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
-        width: studWidth, depth: rafterDepth,
+        width: rafterDepth, depth: studWidth,
         type: 'fascia', wallId: '',
       });
       members.push({
         start: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
         end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
-        width: studWidth, depth: rafterDepth,
+        width: rafterDepth, depth: studWidth,
         type: 'fascia', wallId: '',
       });
       members.push({
         start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
         end: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
-        width: studWidth, depth: rafterDepth,
+        width: rafterDepth, depth: studWidth,
         type: 'fascia', wallId: '',
       });
       members.push({
         start: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
         end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
-        width: studWidth, depth: rafterDepth,
+        width: rafterDepth, depth: studWidth,
         type: 'fascia', wallId: '',
       });
 
