@@ -28,14 +28,19 @@ const ROOF_TYPES: Set<MemberType> = new Set([
   'rafter', 'ridge_beam', 'collar_tie', 'ceiling_joist', 'fascia',
 ]);
 
-/** Price per linear meter by cross-section area bracket ($/m) */
+/** Price per linear meter in DKK by cross-section area bracket */
 function pricePerMeter(width: number, depth: number): number {
   const area = width * depth * 1e6; // mm²
-  if (area < 3000) return 2.80;
-  if (area < 5000) return 4.20;
-  if (area < 8000) return 5.60;
-  if (area < 12000) return 7.50;
-  return 9.80;
+  if (area < 3000) return 20;
+  if (area < 5000) return 30;
+  if (area < 8000) return 40;
+  if (area < 12000) return 55;
+  return 70;
+}
+
+/** Format a number as Danish kroner */
+function dkk(n: number): string {
+  return n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
 }
 
 type WallCategory = 'exterior' | 'interior' | 'roof';
@@ -150,7 +155,7 @@ function renderRow(it: LineItem): string {
       <span class="checkout-row-dim">${it.sectionW} &times; ${it.sectionD} mm</span>
     </div>
     <div class="checkout-row-mid">${it.count} pcs &middot; ${it.totalLength.toFixed(1)} m</div>
-    <div class="checkout-row-price">$${it.subtotal.toFixed(2)}</div>
+    <div class="checkout-row-price">${dkk(it.subtotal)}</div>
   </div>`;
 }
 
@@ -230,7 +235,7 @@ export class CheckoutPage {
               </div>
               <div class="checkout-group-subtotal">
                 <span>Subtotal</span>
-                <span>$${g.subtotal.toFixed(2)}</span>
+                <span>${dkk(g.subtotal)}</span>
               </div>
             </div>
           `).join('')}
@@ -238,7 +243,7 @@ export class CheckoutPage {
 
         <div class="checkout-total-row">
           <span>Total</span>
-          <span class="checkout-total-price">$${grandTotal.toFixed(2)}</span>
+          <span class="checkout-total-price">${dkk(grandTotal)}</span>
         </div>
       </div>
     `;
@@ -249,8 +254,18 @@ export class CheckoutPage {
 
     this.overlay.style.display = 'flex';
 
-    // Defer 3D setup so the browser computes layout first
-    requestAnimationFrame(() => this.setup3DPreview(frame));
+    // Defer 3D setup — retry until the container has layout dimensions
+    this.waitAndSetup3D(frame, 0);
+  }
+
+  private waitAndSetup3D(frame: TimberFrame, attempt: number): void {
+    if (attempt > 20) return; // give up after ~1s
+    const container = this.overlay.querySelector('#checkout-3d') as HTMLElement;
+    if (!container || container.clientWidth === 0 || container.clientHeight === 0) {
+      setTimeout(() => this.waitAndSetup3D(frame, attempt + 1), 50);
+      return;
+    }
+    this.setup3DPreview(frame);
   }
 
   hide(): void {
@@ -270,7 +285,6 @@ export class CheckoutPage {
 
     const w = container.clientWidth;
     const h = container.clientHeight;
-    if (w === 0 || h === 0) return;
 
     // Scene
     const scene = new THREE.Scene();
