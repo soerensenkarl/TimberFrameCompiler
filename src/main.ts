@@ -6,6 +6,7 @@ import { DrawingTool } from './ui/DrawingTool';
 import { FootprintTool } from './ui/FootprintTool';
 import { OpeningTool } from './ui/OpeningTool';
 import { ControlPanel } from './ui/ControlPanel';
+import { CheckoutPage } from './ui/CheckoutPage';
 import { Phase } from './types';
 
 // Initialize subsystems
@@ -17,6 +18,7 @@ const meshBuilder = new MeshBuilder();
 const engine = new TimberEngine();
 const wallManager = new WallManager();
 const controlPanel = new ControlPanel(controlsContainer);
+const checkoutPage = new CheckoutPage();
 
 const gridSnap = controlPanel.getParams().gridSnap;
 
@@ -50,6 +52,9 @@ function clearPreviews(): void {
   }
 }
 
+// Track the last generated frame for checkout
+let lastFrame: ReturnType<typeof engine.generate> | null = null;
+
 // Regenerate timber frame from current walls + params + openings
 function regenerate(): void {
   const walls = wallManager.getWalls();
@@ -59,11 +64,13 @@ function regenerate(): void {
   clearFrame();
 
   if (walls.length === 0) {
+    lastFrame = null;
     controlPanel.updateStats(null, 0);
     return;
   }
 
   const frame = engine.generate(walls, params, openings);
+  lastFrame = frame;
   const group = meshBuilder.buildFrame(frame);
   sceneManager.frameGroup.add(group);
 
@@ -170,6 +177,31 @@ controlPanel.onParamsChange = (params) => {
 // Wire: opening config changes from control panel
 controlPanel.onOpeningConfigChange = (config) => {
   openingTool.setConfig(config);
+};
+
+// Wire: buy button opens checkout
+controlPanel.onBuy = () => {
+  if (!lastFrame || lastFrame.members.length === 0) return;
+
+  // Ensure roof config is applied and frame is current
+  regenerate();
+  if (!lastFrame) return;
+
+  // Capture a screenshot of the current 3D view
+  sceneManager.renderer.render(sceneManager.scene, sceneManager.camera);
+  const screenshot = sceneManager.renderer.domElement.toDataURL('image/png');
+
+  // Hide the main app and show checkout
+  const appEl = document.getElementById('app')!;
+  appEl.style.display = 'none';
+  checkoutPage.show(lastFrame, screenshot);
+};
+
+// Wire: checkout back button returns to designer
+checkoutPage.onBack = () => {
+  const appEl = document.getElementById('app')!;
+  appEl.style.display = 'flex';
+  sceneManager.resize();
 };
 
 // Wire: load example house

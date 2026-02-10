@@ -79,6 +79,7 @@ export class ControlPanel {
   onParamsChange: ((params: FrameParams) => void) | null = null;
   onOpeningConfigChange: ((config: OpeningConfig) => void) | null = null;
   onLoadExample: (() => void) | null = null;
+  onBuy: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -483,7 +484,7 @@ export class ControlPanel {
       this.nextBtn.textContent = 'Start Over';
       this.nextBtn.className = 'btn btn-danger btn-next';
     } else if (this.currentPhase === 'roof') {
-      this.nextBtn.textContent = 'Finish';
+      this.nextBtn.textContent = 'Buy';
       this.nextBtn.className = 'btn btn-primary btn-next';
       this.nextBtn.style.background = '#2ecc71';
     } else {
@@ -505,9 +506,7 @@ export class ControlPanel {
     }
 
     if (this.currentPhase === 'roof') {
-      this.currentPhase = 'done';
-      this.updatePhaseUI();
-      this.onPhaseChange?.(this.currentPhase);
+      this.onBuy?.();
       return;
     }
 
