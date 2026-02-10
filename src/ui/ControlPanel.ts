@@ -26,13 +26,21 @@ export class ControlPanel {
   private wallHeightInput!: HTMLInputElement;
   private studWidthInput!: HTMLInputElement;
   private studDepthInput!: HTMLInputElement;
+  private exteriorStudDepthInput!: HTMLInputElement;
   private gridSnapInput!: HTMLInputElement;
   private noggingsInput!: HTMLInputElement;
 
   // Roof controls
   private roofSection!: HTMLElement;
+  private roofGableBtn!: HTMLButtonElement;
+  private roofFlatBtn!: HTMLButtonElement;
+  private pitchRow!: HTMLElement;
   private pitchInput!: HTMLInputElement;
   private overhangInput!: HTMLInputElement;
+  private rafterWidthInput!: HTMLInputElement;
+  private rafterDepthInput!: HTMLInputElement;
+  private axisRow!: HTMLElement;
+  private axisLabel!: HTMLElement;
   private ridgeXBtn!: HTMLButtonElement;
   private ridgeZBtn!: HTMLButtonElement;
 
@@ -57,6 +65,9 @@ export class ControlPanel {
   // Phase-specific sections
   private drawingHint!: HTMLElement;
   private paramSection!: HTMLElement;
+  private paramSectionTitle!: HTMLElement;
+  private exteriorStudDepthRow!: HTMLElement;
+  private studDepthRow!: HTMLElement;
 
   // Opening config state
   private openingConfig: OpeningConfig = { type: 'window', width: 0.9, height: 1.2, sillHeight: 0.9 };
@@ -123,14 +134,7 @@ export class ControlPanel {
     title.textContent = 'Timber Frame Compiler';
     this.container.appendChild(title);
 
-    // Load example button
-    const exampleBtn = document.createElement('button');
-    exampleBtn.className = 'btn btn-example';
-    exampleBtn.textContent = 'Load Example House';
-    exampleBtn.addEventListener('click', () => this.onLoadExample?.());
-    this.container.appendChild(exampleBtn);
-
-    // Phase stepper
+    // Phase stepper (positioned at top of menu)
     const stepper = document.createElement('div');
     stepper.className = 'phase-stepper';
     for (const phase of PHASE_ORDER) {
@@ -184,18 +188,40 @@ export class ControlPanel {
     roofTitle.textContent = 'Roof Configuration';
     this.roofSection.appendChild(roofTitle);
 
+    // Roof type toggle (Gable / Flat)
+    const roofTypeBtns = document.createElement('div');
+    roofTypeBtns.className = 'axis-buttons';
+    this.roofGableBtn = document.createElement('button');
+    this.roofGableBtn.className = 'btn btn-axis active';
+    this.roofGableBtn.textContent = 'Gable';
+    this.roofGableBtn.addEventListener('click', () => this.setRoofType('gable'));
+    this.roofFlatBtn = document.createElement('button');
+    this.roofFlatBtn.className = 'btn btn-axis';
+    this.roofFlatBtn.textContent = 'Flat';
+    this.roofFlatBtn.addEventListener('click', () => this.setRoofType('flat'));
+    roofTypeBtns.appendChild(this.roofGableBtn);
+    roofTypeBtns.appendChild(this.roofFlatBtn);
+    this.roofSection.appendChild(roofTypeBtns);
+
     const pitchResult = this.addSlider(this.roofSection, 'Pitch Angle', 30, 10, 60, 1, '°');
     this.pitchInput = pitchResult.input;
+    this.pitchRow = pitchResult.input.parentElement as HTMLElement;
 
     const overhangResult = this.addSlider(this.roofSection, 'Overhang', 300, 0, 1000, 50, 'mm');
     this.overhangInput = overhangResult.input;
 
-    const axisRow = document.createElement('div');
-    axisRow.className = 'axis-toggle';
-    const axisLabel = document.createElement('div');
-    axisLabel.className = 'axis-label';
-    axisLabel.textContent = 'Ridge Direction';
-    axisRow.appendChild(axisLabel);
+    const rafterWidthResult = this.addSlider(this.roofSection, 'Rafter Width', 45, 30, 100, 5, 'mm');
+    this.rafterWidthInput = rafterWidthResult.input;
+
+    const rafterDepthResult = this.addSlider(this.roofSection, 'Rafter Depth', 140, 90, 300, 5, 'mm');
+    this.rafterDepthInput = rafterDepthResult.input;
+
+    this.axisRow = document.createElement('div');
+    this.axisRow.className = 'axis-toggle';
+    this.axisLabel = document.createElement('div');
+    this.axisLabel.className = 'axis-label';
+    this.axisLabel.textContent = 'Ridge Direction';
+    this.axisRow.appendChild(this.axisLabel);
 
     const axisBtns = document.createElement('div');
     axisBtns.className = 'axis-buttons';
@@ -209,8 +235,8 @@ export class ControlPanel {
     this.ridgeZBtn.addEventListener('click', () => this.setRidgeAxis('z'));
     axisBtns.appendChild(this.ridgeXBtn);
     axisBtns.appendChild(this.ridgeZBtn);
-    axisRow.appendChild(axisBtns);
-    this.roofSection.appendChild(axisRow);
+    this.axisRow.appendChild(axisBtns);
+    this.roofSection.appendChild(this.axisRow);
 
     body.appendChild(this.roofSection);
 
@@ -218,9 +244,9 @@ export class ControlPanel {
     this.paramSection = document.createElement('div');
     this.paramSection.className = 'panel-section';
 
-    const paramTitle = document.createElement('h3');
-    paramTitle.textContent = 'Frame Parameters';
-    this.paramSection.appendChild(paramTitle);
+    this.paramSectionTitle = document.createElement('h3');
+    this.paramSectionTitle.textContent = 'Frame Parameters';
+    this.paramSection.appendChild(this.paramSectionTitle);
 
     const spacingResult = this.addSlider(this.paramSection, 'Stud Spacing', this.params.studSpacing * 1000, 200, 1200, 50, 'mm');
     this.studSpacingInput = spacingResult.input;
@@ -231,8 +257,13 @@ export class ControlPanel {
     const widthResult = this.addSlider(this.paramSection, 'Timber Width', this.params.studWidth * 1000, 30, 100, 5, 'mm');
     this.studWidthInput = widthResult.input;
 
-    const depthResult = this.addSlider(this.paramSection, 'Timber Depth', this.params.studDepth * 1000, 45, 250, 5, 'mm');
+    const extDepthResult = this.addSlider(this.paramSection, 'Exterior Timber Depth', this.params.exteriorStudDepth * 1000, 45, 250, 5, 'mm');
+    this.exteriorStudDepthInput = extDepthResult.input;
+    this.exteriorStudDepthRow = extDepthResult.input.parentElement as HTMLElement;
+
+    const depthResult = this.addSlider(this.paramSection, 'Interior Timber Depth', this.params.studDepth * 1000, 45, 250, 5, 'mm');
     this.studDepthInput = depthResult.input;
+    this.studDepthRow = depthResult.input.parentElement as HTMLElement;
 
     const snapResult = this.addSlider(this.paramSection, 'Grid Snap', this.params.gridSnap * 1000, 50, 1000, 50, 'mm');
     this.gridSnapInput = snapResult.input;
@@ -289,6 +320,13 @@ export class ControlPanel {
       Scroll: Zoom &middot; Escape: Cancel
     `;
     body.appendChild(help);
+
+    // Load example button (at bottom of menu)
+    const exampleBtn = document.createElement('button');
+    exampleBtn.className = 'btn btn-example';
+    exampleBtn.textContent = 'Load Example House';
+    exampleBtn.addEventListener('click', () => this.onLoadExample?.());
+    body.appendChild(exampleBtn);
 
     this.container.appendChild(body);
   }
@@ -422,6 +460,17 @@ export class ControlPanel {
     this.openingsSection.style.display = this.currentPhase === 'openings' ? 'flex' : 'none';
     this.roofSection.style.display = this.currentPhase === 'roof' ? 'flex' : 'none';
 
+    // Frame parameters: only show for exterior and interior phases
+    const showParams = this.currentPhase === 'exterior' || this.currentPhase === 'interior';
+    this.paramSection.style.display = showParams ? 'block' : 'none';
+    if (showParams) {
+      this.paramSectionTitle.textContent = this.currentPhase === 'exterior'
+        ? 'Exterior Wall Parameters'
+        : 'Interior Wall Parameters';
+      this.exteriorStudDepthRow.style.display = this.currentPhase === 'exterior' ? 'flex' : 'none';
+      this.studDepthRow.style.display = this.currentPhase === 'interior' ? 'flex' : 'none';
+    }
+
     // Apply roof config when entering roof or done phase for live preview
     if (this.currentPhase === 'roof' || this.currentPhase === 'done') {
       this.params.roof = this.buildRoofConfig();
@@ -479,6 +528,17 @@ export class ControlPanel {
     }
   }
 
+  private setRoofType(type: 'gable' | 'flat'): void {
+    this.roofGableBtn.classList.toggle('active', type === 'gable');
+    this.roofFlatBtn.classList.toggle('active', type === 'flat');
+    const isFlat = type === 'flat';
+    this.pitchRow.style.display = isFlat ? 'none' : 'flex';
+    this.axisRow.style.display = isFlat ? 'none' : 'flex';
+    if (this.currentPhase === 'roof') {
+      this.readParams();
+    }
+  }
+
   private setRidgeAxis(axis: 'x' | 'z'): void {
     this.ridgeXBtn.classList.toggle('active', axis === 'x');
     this.ridgeZBtn.classList.toggle('active', axis === 'z');
@@ -487,12 +547,18 @@ export class ControlPanel {
     }
   }
 
+  private getSelectedRoofType(): 'gable' | 'flat' {
+    return this.roofFlatBtn.classList.contains('active') ? 'flat' : 'gable';
+  }
+
   private buildRoofConfig(): RoofConfig {
     return {
-      type: 'gable',
+      type: this.getSelectedRoofType(),
       pitchAngle: parseFloat(this.pitchInput.value),
       overhang: parseFloat(this.overhangInput.value) / 1000,
       ridgeAxis: this.ridgeXBtn.classList.contains('active') ? 'x' : 'z',
+      rafterWidth: parseFloat(this.rafterWidthInput.value) / 1000,
+      rafterDepth: parseFloat(this.rafterDepthInput.value) / 1000,
     };
   }
 
@@ -543,6 +609,7 @@ export class ControlPanel {
       wallHeight: parseFloat(this.wallHeightInput.value) / 1000,
       studWidth: parseFloat(this.studWidthInput.value) / 1000,
       studDepth: parseFloat(this.studDepthInput.value) / 1000,
+      exteriorStudDepth: parseFloat(this.exteriorStudDepthInput.value) / 1000,
       gridSnap: parseFloat(this.gridSnapInput.value) / 1000,
       noggings: this.noggingsInput.checked,
       roof: (this.currentPhase === 'roof' || this.currentPhase === 'done')

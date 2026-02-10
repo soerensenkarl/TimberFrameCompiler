@@ -63,7 +63,11 @@ export class TimberEngine {
         .filter(o => o.wallId === wall.id)
         .sort((a, b) => a.position - b.position);
       const dir = wallDirs.get(wall.id)!;
-      members.push(...this.generateWallFrame(wall, dir, params, wallOpenings, junctions, walls, wallDirs));
+      // Use exterior depth for exterior walls, standard depth for interior
+      const wallParams = wall.wallType === 'exterior'
+        ? { ...params, studDepth: params.exteriorStudDepth }
+        : params;
+      members.push(...this.generateWallFrame(wall, dir, wallParams, wallOpenings, junctions, walls, wallDirs));
     }
 
     // Corner assemblies and partition backers
@@ -241,10 +245,11 @@ export class TimberEngine {
 
       if (zone) {
         // Cripple stud above header — maintains OC layout
-        const crippleTop = wallHeight - plateThick * 2; // bottom of double top plate
-        if (zone.headerY + EPS < crippleTop) {
+        const headerHeight = studWidth * 2; // doubled header
+        const crippleTop = wallHeight - plateThick * 2; // bottom of top plate
+        if (zone.headerY + headerHeight + EPS < crippleTop) {
           members.push({
-            start: { x: baseX, y: zone.headerY, z: baseZ },
+            start: { x: baseX, y: zone.headerY + headerHeight, z: baseZ },
             end: { x: baseX, y: crippleTop, z: baseZ },
             width: studWidth, depth: studDepth,
             type: 'cripple_stud', wallId: wall.id,
@@ -263,9 +268,9 @@ export class TimberEngine {
         // Skip if this is a junction position (corner/partition studs handle it)
         if (junctionPositions.has(t) && t > EPS && t < dir.length - EPS) continue;
 
-        // Full-height stud: bottom plate top to underside of top plate
+        // Full-height stud: top of bottom plate to bottom of top plate
         const studBottom = plateThick;
-        const studTop = wallHeight - plateThick * 2; // below double top plate
+        const studTop = wallHeight - plateThick * 2; // bottom of top plate
         if (studTop - studBottom > EPS) {
           members.push({
             start: { x: baseX, y: studBottom, z: baseZ },
@@ -314,7 +319,7 @@ export class TimberEngine {
     const krz = wall.start.z + dir.dirZ * kingRightT;
 
     const studBottom = plateThick;
-    const studTop = wallHeight - plateThick * 2;
+    const studTop = wallHeight - plateThick * 2; // bottom of top plate
 
     // King studs — full height, frame the rough opening
     members.push({
@@ -331,8 +336,8 @@ export class TimberEngine {
     });
 
     // Jack studs (trimmers) — tight against king studs on the inside, support the header
-    const jackLeftT = kingLeftT + studDepth;
-    const jackRightT = kingRightT - studDepth;
+    const jackLeftT = kingLeftT + studWidth;
+    const jackRightT = kingRightT - studWidth;
     const jlx = wall.start.x + dir.dirX * jackLeftT;
     const jlz = wall.start.z + dir.dirZ * jackLeftT;
     const jrx = wall.start.x + dir.dirX * jackRightT;
@@ -384,10 +389,10 @@ export class TimberEngine {
     params: FrameParams,
   ): TimberMember[] {
     const members: TimberMember[] = [];
-    const { studWidth, studDepth, wallHeight } = params;
+    const { studWidth, wallHeight } = params;
     const plateThick = studWidth;
     const studBottom = plateThick;
-    const studTop = wallHeight - plateThick * 2;
+    const studTop = wallHeight - plateThick * 2; // bottom of top plate
 
     for (const junc of junctions) {
       if (junc.type === 'corner') {
@@ -398,15 +403,16 @@ export class TimberEngine {
 
         for (const w of jWalls) {
           const d = wallDirs.get(w.id)!;
+          const depth = w.wallType === 'exterior' ? params.exteriorStudDepth : params.studDepth;
           // Offset a backer stud along the wall normal (creates nailing surface)
-          const bx = junc.point.x + d.normX * studDepth;
-          const bz = junc.point.z + d.normZ * studDepth;
+          const bx = junc.point.x + d.normX * depth;
+          const bz = junc.point.z + d.normZ * depth;
 
           if (studTop > studBottom + EPS) {
             members.push({
               start: { x: bx, y: studBottom, z: bz },
               end: { x: bx, y: studTop, z: bz },
-              width: studWidth, depth: studDepth,
+              width: studWidth, depth,
               type: 'corner_stud', wallId: w.id,
             });
           }
@@ -423,6 +429,7 @@ export class TimberEngine {
         for (const twId of throughWalls) {
           const tw = walls.find(w => w.id === twId)!;
           const td = wallDirs.get(twId)!;
+          const depth = tw.wallType === 'exterior' ? params.exteriorStudDepth : params.studDepth;
 
           // Place a backer stud on each side of the butting wall, offset by studDepth along the through wall
           for (const _bwId of buttingWalls) {
@@ -430,7 +437,7 @@ export class TimberEngine {
             const t = this.projectPointOntoWallT(junc.point, tw, td);
             if (t === null) continue;
 
-            const offset = studDepth * 0.75;
+            const offset = depth * 0.75;
             for (const side of [-1, 1]) {
               const bt = t + side * offset;
               if (bt < EPS || bt > td.length - EPS) continue;
@@ -441,7 +448,7 @@ export class TimberEngine {
                 members.push({
                   start: { x: bx, y: studBottom, z: bz },
                   end: { x: bx, y: studTop, z: bz },
-                  width: studWidth, depth: studDepth,
+                  width: studWidth, depth,
                   type: 'partition_backer', wallId: twId,
                 });
               }
@@ -473,7 +480,7 @@ export class TimberEngine {
     for (const z of zones) {
       allPositions.push(z.left, z.right);
       // Also add jack stud positions
-      allPositions.push(z.left + studDepth, z.right - studDepth);
+      allPositions.push(z.left + studWidth, z.right - studWidth);
     }
     allPositions.sort((a, b) => a - b);
 
@@ -529,13 +536,77 @@ export class TimberEngine {
       maxZ = Math.max(maxZ, w.start.z, w.end.z);
     }
 
-    const pitchRad = (roof.pitchAngle * Math.PI) / 180;
     const overhang = roof.overhang;
-    const rafterWidth = studWidth;
-    const rafterDepth = studDepth * 1.25; // rafters are typically deeper than wall studs
+    const rafterWidth = roof.rafterWidth;
+    const rafterDepth = roof.rafterDepth;
 
-    const ridgeWidth = studWidth * 1.5;
-    const ridgeDepth = studDepth * 1.5;
+    // ── Flat roof ──
+    if (roof.type === 'flat') {
+      const spanX = maxX - minX;
+      const spanZ = maxZ - minZ;
+
+      // Joists span the shorter direction for structural efficiency
+      const joistAlongZ = spanZ <= spanX;
+      const primarySpan = joistAlongZ ? spanZ : spanX;
+      const secondarySpan = joistAlongZ ? spanX : spanZ;
+
+      const joistCount = Math.max(1, Math.round(secondarySpan / studSpacing));
+      const joistStep = secondarySpan / joistCount;
+
+      for (let i = 0; i <= joistCount; i++) {
+        if (joistAlongZ) {
+          const x = minX + i * joistStep;
+          members.push({
+            start: { x, y: wallHeight, z: minZ - overhang },
+            end: { x, y: wallHeight, z: maxZ + overhang },
+            width: rafterDepth, depth: rafterWidth,
+            type: 'ceiling_joist', wallId: '',
+          });
+        } else {
+          const z = minZ + i * joistStep;
+          members.push({
+            start: { x: minX - overhang, y: wallHeight, z },
+            end: { x: maxX + overhang, y: wallHeight, z },
+            width: rafterDepth, depth: rafterWidth,
+            type: 'ceiling_joist', wallId: '',
+          });
+        }
+      }
+
+      // Fascia boards on all four edges
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: minX - overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: minX - overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+      members.push({
+        start: { x: maxX + overhang, y: wallHeight, z: minZ - overhang },
+        end: { x: maxX + overhang, y: wallHeight, z: maxZ + overhang },
+        width: studWidth, depth: rafterDepth,
+        type: 'fascia', wallId: '',
+      });
+
+      return members;
+    }
+
+    // ── Gable roof ──
+    const pitchRad = (roof.pitchAngle * Math.PI) / 180;
+
+    const ridgeWidth = rafterWidth * 1.5;
+    const ridgeDepth = rafterDepth * 1.2;
 
     if (roof.ridgeAxis === 'x') {
       const halfSpan = (maxZ - minZ) / 2;

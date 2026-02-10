@@ -55,10 +55,12 @@ export interface TimberFrame {
 
 /** Roof configuration */
 export interface RoofConfig {
-  type: 'gable';
-  pitchAngle: number;   // degrees
+  type: 'gable' | 'flat';
+  pitchAngle: number;   // degrees (ignored for flat)
   overhang: number;      // meters
-  ridgeAxis: 'x' | 'z'; // which axis the ridge runs along
+  ridgeAxis: 'x' | 'z'; // gable: ridge direction; flat: joist span direction
+  rafterWidth: number;   // meters — cross-section width (narrow face)
+  rafterDepth: number;   // meters — cross-section depth (tall face)
 }
 
 /** User-adjustable frame generation parameters */
@@ -67,6 +69,7 @@ export interface FrameParams {
   wallHeight: number;
   studWidth: number;
   studDepth: number;
+  exteriorStudDepth: number;
   gridSnap: number;
   noggings: boolean;
   roof: RoofConfig | null;
@@ -81,6 +84,7 @@ export const DEFAULT_PARAMS: FrameParams = {
   wallHeight: 2.4,
   studWidth: 0.045,
   studDepth: 0.095,
+  exteriorStudDepth: 0.145,
   gridSnap: 0.5,
   noggings: true,
   roof: null,

@@ -55,9 +55,12 @@ export class MeshBuilder {
     const material = this.getMaterial(member.type);
     const mesh = new THREE.Mesh(geometry, material);
 
+    // Horizontal members use Y as their bottom surface, so offset by width/2
+    // to center the box. Vertical members already encode exact start/end Y.
+    const isHorizontal = Math.abs(dy) < 0.01 * length;
     mesh.position.set(
       (member.start.x + member.end.x) / 2,
-      (member.start.y + member.end.y) / 2 + member.width / 2,
+      (member.start.y + member.end.y) / 2 + (isHorizontal ? member.width / 2 : 0),
       (member.start.z + member.end.z) / 2,
     );
 
@@ -81,11 +84,28 @@ export class MeshBuilder {
       const angle = Math.atan2(dx, dz);
       mesh.rotation.y = angle;
     } else {
-      // Angled member (rafters)
+      // Angled member (rafters): align with normal plane so the depth
+      // face is perpendicular to the roof surface and the width face
+      // runs along the ridge direction.
       const dir = new THREE.Vector3(dx, dy, dz).normalize();
-      const quat = new THREE.Quaternion();
-      quat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-      mesh.setRotationFromQuaternion(quat);
+      const worldUp = new THREE.Vector3(0, 1, 0);
+
+      // Local Y (width) = horizontal direction perpendicular to the rafter
+      const localY = new THREE.Vector3().crossVectors(dir, worldUp).normalize();
+
+      if (localY.lengthSq() < 0.001) {
+        // Near-vertical edge case: fall back to quaternion
+        const quat = new THREE.Quaternion();
+        quat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+        mesh.setRotationFromQuaternion(quat);
+      } else {
+        // Local X (depth) = roof surface normal, perpendicular to both rafter and ridge
+        const localX = new THREE.Vector3().crossVectors(localY, dir).normalize();
+        // Local Z (length) = rafter direction
+        const m4 = new THREE.Matrix4();
+        m4.makeBasis(localX, localY, dir);
+        mesh.setRotationFromMatrix(m4);
+      }
     }
 
     mesh.castShadow = true;
