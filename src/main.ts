@@ -72,6 +72,12 @@ function regenerate(): void {
   const frame = engine.generate(walls, params, openings);
   lastFrame = frame;
   const group = meshBuilder.buildFrame(frame);
+
+  // Ghost roof members when in exterior walls phase
+  if (controlPanel.getCurrentPhase() === 'exterior') {
+    meshBuilder.ghostRoofMembers(group);
+  }
+
   sceneManager.frameGroup.add(group);
 
   const stats = meshBuilder.getMemberCount(frame);
@@ -160,8 +166,8 @@ newHouseBtn.addEventListener('click', () => {
   controlPanel.updateStats(null, 0);
   controlPanel.updateOpeningCount(0);
 
-  // Reset to exterior phase
-  controlPanel.setPhase('exterior');
+  // Reset to exterior phase (resetRoof=true clears roof config)
+  controlPanel.setPhase('exterior', true);
   onPhaseChange('exterior');
 
   // Hide the button
