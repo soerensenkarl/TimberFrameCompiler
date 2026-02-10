@@ -248,9 +248,6 @@ controlPanel.onLoadExample = () => {
   const params = controlPanel.getParams();
   params.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x', rafterWidth: 0.045, rafterDepth: 0.14 };
   onPhaseChange('done');
-
-  // Show "New house" button
-  newHouseBtn.classList.add('visible');
 };
 
 // ─── Mobile pull-up handle ───
