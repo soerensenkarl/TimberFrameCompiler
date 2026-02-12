@@ -7,8 +7,11 @@ export class WallManager {
   private walls: Map<string, Wall> = new Map();
   private openings: Map<string, Opening> = new Map();
   onChange: ((walls: Wall[]) => void) | null = null;
+  onUndoStackChange: ((canUndo: boolean) => void) | null = null;
+  private undoStack: Array<{ walls: [string, Wall][]; openings: [string, Opening][]; nwId: number; noId: number }> = [];
 
   addWall(start: Point2D, end: Point2D, wallType: 'exterior' | 'interior' = 'exterior'): Wall {
+    this.pushUndo();
     const id = `wall-${nextId++}`;
     const wall: Wall = { id, start, end, wallType };
     this.walls.set(id, wall);
@@ -17,6 +20,7 @@ export class WallManager {
   }
 
   removeWall(id: string): void {
+    this.pushUndo();
     this.walls.delete(id);
     // Remove openings on this wall
     for (const [oid, o] of this.openings) {
@@ -38,6 +42,7 @@ export class WallManager {
   }
 
   clear(): void {
+    this.pushUndo();
     this.walls.clear();
     this.openings.clear();
     nextId = 1;
@@ -51,6 +56,7 @@ export class WallManager {
 
   /** Replace all exterior walls with a rectangle footprint (notifies once) */
   setFootprint(minX: number, minZ: number, maxX: number, maxZ: number): void {
+    this.pushUndo();
     // Remove existing exterior walls and their openings
     for (const [id, w] of this.walls) {
       if (w.wallType === 'exterior') {
@@ -100,6 +106,7 @@ export class WallManager {
     wallId: string, type: 'window' | 'door',
     position: number, width: number, height: number, sillHeight: number,
   ): Opening {
+    this.pushUndo();
     const id = `opening-${nextOpeningId++}`;
     const opening: Opening = { id, wallId, type, position, width, height, sillHeight };
     this.openings.set(id, opening);
@@ -108,6 +115,7 @@ export class WallManager {
   }
 
   removeOpening(id: string): void {
+    this.pushUndo();
     this.openings.delete(id);
     this.notify();
   }
@@ -121,6 +129,7 @@ export class WallManager {
   }
 
   clearOpenings(): void {
+    this.pushUndo();
     this.openings.clear();
     nextOpeningId = 1;
     this.notify();
@@ -191,6 +200,40 @@ export class WallManager {
     const opening: Opening = { id, wallId, type, position, width, height, sillHeight };
     this.openings.set(id, opening);
     return opening;
+  }
+
+  // ─── Undo ───
+
+  private pushUndo(): void {
+    this.undoStack.push({
+      walls: Array.from(this.walls.entries()).map(([id, w]) => [id, { ...w, start: { ...w.start }, end: { ...w.end } }]),
+      openings: Array.from(this.openings.entries()).map(([id, o]) => [id, { ...o }]),
+      nwId: nextId,
+      noId: nextOpeningId,
+    });
+    if (this.undoStack.length > 30) this.undoStack.shift();
+    this.onUndoStackChange?.(true);
+  }
+
+  undo(): boolean {
+    const snap = this.undoStack.pop();
+    if (!snap) return false;
+    this.walls = new Map(snap.walls);
+    this.openings = new Map(snap.openings);
+    nextId = snap.nwId;
+    nextOpeningId = snap.noId;
+    this.onUndoStackChange?.(this.undoStack.length > 0);
+    this.notify();
+    return true;
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  clearUndoStack(): void {
+    this.undoStack = [];
+    this.onUndoStackChange?.(false);
   }
 
   private notify(): void {
