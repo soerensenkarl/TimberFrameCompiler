@@ -85,6 +85,31 @@ function regenerate(): void {
   controlPanel.updateOpeningCount(openings.length);
 }
 
+// ─── Viewport action buttons (top-left overlay) ───
+
+const viewportActions = document.createElement('div');
+viewportActions.className = 'viewport-actions';
+viewport.appendChild(viewportActions);
+
+const undoBtn = document.createElement('button');
+undoBtn.className = 'btn-viewport-action btn-undo';
+undoBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.69 3L3 13"/></svg>Undo`;
+viewportActions.appendChild(undoBtn);
+
+undoBtn.addEventListener('click', () => {
+  drawingTool.cancelDrawing();
+  wallManager.undo();
+});
+
+const nextWallBtn = document.createElement('button');
+nextWallBtn.className = 'btn-viewport-action btn-next-wall';
+nextWallBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Next Wall`;
+viewportActions.appendChild(nextWallBtn);
+
+nextWallBtn.addEventListener('click', () => {
+  drawingTool.cancelDrawing();
+});
+
 // ─── Draw-mode toggle for touch devices ───
 
 const drawToggle = document.createElement('button');
@@ -144,6 +169,9 @@ function onPhaseChange(phase: Phase): void {
   // Show draw toggle on touch devices when a tool is active
   drawToggle.style.display = (activeToolRef && isTouchDevice) ? 'flex' : 'none';
 
+  // Show next-wall button only on mobile during interior phase
+  nextWallBtn.style.display = (phase === 'interior' && isTouchDevice) ? 'flex' : 'none';
+
   // Re-render frame preview whenever phase changes
   regenerate();
 }
@@ -191,6 +219,20 @@ controlPanel.onClear = () => {
   controlPanel.updateStats(null, 0);
   controlPanel.updateOpeningCount(0);
 };
+
+// Wire: undo stack changes update undo button visibility
+wallManager.onUndoStackChange = (canUndo) => {
+  undoBtn.style.display = canUndo ? 'flex' : 'none';
+};
+
+// Wire: Ctrl+Z / Cmd+Z for undo
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault();
+    drawingTool.cancelDrawing();
+    wallManager.undo();
+  }
+});
 
 // Wire: wall changes trigger live regeneration
 wallManager.onChange = () => {
@@ -282,5 +324,8 @@ const preloadParams = controlPanel.getParams();
 preloadParams.roof = { type: 'gable', pitchAngle: 30, overhang: 0.3, ridgeAxis: 'x', rafterWidth: 0.045, rafterDepth: 0.14 };
 onPhaseChange('done');
 newHouseBtn.classList.add('visible');
+
+// Clear undo stack from initial example load — nothing meaningful to undo to
+wallManager.clearUndoStack();
 
 sceneManager.start();
